@@ -26,3 +26,9 @@ function getBotReply(message) {
     return "I'm still learning! Try asking about burns or bleeding.";
   }
 }
+
+function handleKey(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+}
