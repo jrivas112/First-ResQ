@@ -36,6 +36,7 @@
 async function sendMessage() {
   const input = document.getElementById("user-input");
   const chatBox = document.getElementById("chat-box");
+  const ragOnlyMode = document.getElementById("rag-only-mode")?.checked || false;
 
   const userMessage = input.value;
   if (!userMessage) return;
@@ -43,8 +44,9 @@ async function sendMessage() {
   // Display user message
   chatBox.innerHTML += `<div class="bubble user"><strong>You:</strong> ${userMessage}</div>`;
 
-  // Use local AI endpoint only
-  const endpoint = "http://localhost:8000/ask";
+  // Choose endpoint based on toggle
+  const endpoint = ragOnlyMode ? "http://localhost:8000/ask-rag-only" : "http://localhost:8000/ask";
+  const aiMode = ragOnlyMode ? "RAG Only" : "Enhanced AI";
 
   // Send to backend
   try {
@@ -87,7 +89,7 @@ async function sendMessage() {
     }
 
     chatBox.innerHTML += `<div class="bubble bot">
-      <strong>QHelper AI:</strong> ${botReply}${methodInfo}
+      <strong>QHelper AI (${aiMode}):</strong> ${botReply}${methodInfo}
     </div>`;
   } catch (err) {
     chatBox.innerHTML += `<div class="bubble bot">
@@ -109,7 +111,23 @@ function handleKey(event) {
 // Set status on page load
 document.addEventListener("DOMContentLoaded", function() {
   const statusText = document.getElementById("status-text");
-  if (statusText) {
-    statusText.innerHTML = "🟢 Offline-First AI Assistant Ready";
+  const ragToggle = document.getElementById("rag-only-mode");
+  
+  function updateStatus() {
+    if (statusText) {
+      if (ragToggle?.checked) {
+        statusText.innerHTML = "� RAG-Only Mode - Knowledge Base Search";
+      } else {
+        statusText.innerHTML = "🟢 Enhanced AI Mode - RAG + LLM Reasoning";
+      }
+    }
+  }
+  
+  // Set initial status
+  updateStatus();
+  
+  // Update status when toggle changes
+  if (ragToggle) {
+    ragToggle.addEventListener("change", updateStatus);
   }
 });

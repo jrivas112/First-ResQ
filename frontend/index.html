@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>First Res-Q</title>
-  <link rel="stylesheet" href="style/style.css">
+  <link rel="stylesheet" href="/style/style.css">
 </head>
 <body>
   <header>
@@ -15,8 +15,17 @@
   <main>
     <section>
         <div class="chat-container">
-          <div class="status-indicator">
-            <span id="status-text">🟢 Offline-First AI Assistant Ready</span>
+          <div class="ai-controls">
+            <div class="status-indicator">
+              <span id="status-text">🟢 Offline-First AI Assistant Ready</span>
+            </div>
+            <div class="ai-toggle">
+              <label>
+                <input type="checkbox" id="rag-only-mode"> 
+                Use RAG Only (No LLM Enhancement)
+              </label>
+              <small class="toggle-hint">Toggle ON for fastest responses using only the knowledge base</small>
+            </div>
           </div>
           <div id="chat-box"></div>
           <input type="text" id="user-input" placeholder="Ask a first aid question..." onkeydown="handleKey(event)"/>

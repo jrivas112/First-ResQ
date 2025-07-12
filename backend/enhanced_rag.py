@@ -90,17 +90,22 @@ class EnhancedFirstAidRAG:
                     "stream": False,
                     "options": {
                         "temperature": 0.7,
-                        "max_tokens": 300
+                        "num_predict": 200,  # Use num_predict instead of max_tokens
+                        "top_p": 0.9,
+                        "stop": ["\n\n"]  # Stop at double newline for concise responses
                     }
                 },
-                timeout=30
+                timeout=15  # Reduced timeout to 15 seconds
             )
             
             if response.status_code == 200:
                 return response.json().get("response", "")
             else:
-                print(f"Ollama error: {response.status_code}")
+                print(f"Ollama error: {response.status_code} - {response.text}")
                 return None
+        except requests.exceptions.Timeout:
+            print("Ollama request timed out (15s)")
+            return None
         except Exception as e:
             print(f"Failed to connect to Ollama: {e}")
             return None
@@ -137,15 +142,9 @@ class EnhancedFirstAidRAG:
         """Get answer using Ollama with RAG context"""
         if not similar_questions or similar_questions[0]['similarity'] < 0.05:
             # No good matches, use Ollama alone
-            prompt = f"""You are a first aid assistant. Please provide clear, safe first aid guidance for this question:
+            prompt = f"""First aid question: {query}
 
-Question: {query}
-
-Important: 
-- Only provide basic first aid information
-- Always recommend seeking professional medical help for serious injuries
-- If you're unsure, advise calling emergency services
-- Keep responses concise and practical
+Provide a brief, safe first aid response. If serious, advise seeking medical help.
 
 Answer:"""
             
@@ -160,20 +159,13 @@ Answer:"""
                 }
         else:
             # Use RAG context with Ollama
-            context = "\n\n".join([f"Q: {q['question']}\nA: {q['answer']}" for q in similar_questions[:2]])
+            context = similar_questions[0]['answer']  # Just use the best match
             
-            prompt = f"""You are a first aid assistant. Use the following first aid knowledge to answer the user's question. Provide a clear, helpful response based on this information.
+            prompt = f"""Based on this first aid knowledge: {context}
 
-Knowledge Base:
-{context}
+Question: {query}
 
-User Question: {query}
-
-Instructions:
-- Use the knowledge base to inform your answer
-- Provide practical, safe first aid advice
-- Always recommend professional medical help for serious situations
-- Keep the response clear and actionable
+Provide a clear, helpful response based on this information.
 
 Answer:"""
             
@@ -182,7 +174,7 @@ Answer:"""
                 return {
                     "answer": ollama_response.strip(),
                     "confidence": min(0.9, similar_questions[0]['similarity'] + 0.3),
-                    "source": f"AI enhanced with knowledge from {len(similar_questions)} similar cases",
+                    "source": f"AI enhanced with knowledge from similar case",
                     "similar_questions": [q['question'][:80] + "..." if len(q['question']) > 80 else q['question'] for q in similar_questions[:3]],
                     "method": "rag_plus_ollama"
                 }
@@ -195,8 +187,9 @@ Answer:"""
             self.load_data()
             self.generate_vectors()
             
-            # Test Ollama connection
-            test_response = self.query_ollama("Hello", "phi3:mini")
+            # Test Ollama connection and model availability
+            print("Testing Ollama connection...")
+            test_response = self.test_ollama_connection()
             if test_response:
                 print("✅ Enhanced First Aid RAG system ready with Ollama!")
             else:
@@ -204,6 +197,32 @@ Answer:"""
             return True
         except Exception as e:
             print(f"Error initializing enhanced RAG system: {e}")
+            return False
+    
+    def test_ollama_connection(self) -> bool:
+        """Test if Ollama is available and has the required model"""
+        try:
+            # First check if Ollama is responding
+            response = requests.get(f"http://{self.ollama_host}/api/tags", timeout=5)
+            if response.status_code != 200:
+                print(f"Ollama not responding: {response.status_code}")
+                return False
+            
+            # Check if our preferred model is available
+            models = response.json().get("models", [])
+            model_names = [model.get("name", "") for model in models]
+            
+            if "phi3:mini" in model_names:
+                print("Found phi3:mini model")
+                # Test a simple query
+                test_result = self.query_ollama("Test", "phi3:mini")
+                return test_result is not None
+            else:
+                print(f"phi3:mini model not found. Available models: {model_names}")
+                return False
+                
+        except Exception as e:
+            print(f"Error testing Ollama: {e}")
             return False
 
 # Usage example

@@ -29,55 +29,94 @@ h1, h2 {
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-.user {
-  background-color: #e7e3ff;
-  align-self: flex-end;
-  text-align: right;
-  margin-left: auto;
+.ai-controls {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
 
-.bot {
-  background-color: #e3edff;
-  align-self: flex-start;
-  text-align: left;
-  margin-right: auto;
+.status-indicator {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: #d4edda;
+  color: #155724;
+  border-radius: 5px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.ai-toggle {
+  margin-top: 10px;
+}
+
+.ai-toggle label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
+  color: #495057;
+}
+
+.ai-toggle input[type="checkbox"] {
+  margin-right: 8px;
+  transform: scale(1.2);
+}
+
+.toggle-hint {
+  display: block;
+  margin-top: 5px;
+  margin-left: 24px;
+  color: #6c757d;
+  font-size: 0.8em;
+  font-style: italic;
 }
 
 #chat-box {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  height: 450px;
-  padding: 10px;
-  margin-bottom: 10px;
-}
-
-/*#chat-box {
   height: 300px;
   overflow-y: auto;
   border: 1px solid #ccc;
   padding: 10px;
   margin-bottom: 10px;
-}*/
+  background: #fff;
+}
+
+.bubble {
+  margin: 10px 0;
+  padding: 10px 15px;
+  border-radius: 15px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+.bubble.user {
+  background: #0078d7;
+  color: white;
+  margin-left: auto;
+  text-align: right;
+}
+
+.bubble.bot {
+  background: #f1f3f4;
+  color: #333;
+  margin-right: auto;
+}
+
+.bubble small {
+  opacity: 0.7;
+  font-size: 0.85em;
+}
 
 #user-input {
-  width: 92%;
-  margin-right: 10px;
+  width: 90%;
   padding: 8px;
   font-family: Verdana, sans-serif;
 }
 
 button {
-  text-align: center;
-  padding: 0px 10px;
-  padding-bottom: 5px;
-  padding-top: 3px;
-  border-radius: 10px;
-  font-size: larger;
-  float: right;
-  background-color: #0078d7;
-  border-color: #0078d7;
-  color: white;
+  padding: 8px 12px;
+  color: #333;
 }
 
 .bubble {
@@ -87,4 +126,24 @@ button {
   border-radius: 10px;
   font-size: 14px;
   line-height: 1.4;
+}
+
+.user {
+  background-color: #d1e7dd;
+  align-self: flex-end;
+  text-align: right;
+  margin-left: auto;
+}
+
+.bot {
+  background-color: #f8d7da;
+  align-self: flex-start;
+  text-align: left;
+  margin-right: auto;
+}
+
+#chat-box {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
 }
