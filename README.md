@@ -172,7 +172,54 @@ Edit files in `frontend/` to:
 - Change chat behavior (`chatbot.js`)
 - Add new features
 
-## 🛑 Stopping the Application
+## � Updating the Application
+
+When new code updates are available, you can update your installation while preserving your downloaded models:
+
+### Quick Update (Recommended)
+
+**Windows:**
+```batch
+# Pull latest changes
+git pull
+
+# Run update script
+update.bat
+```
+
+**Linux/macOS:**
+```bash
+# Pull latest changes
+git pull
+
+# Run update script
+./update.sh
+```
+
+### Manual Update
+
+If you prefer to update manually:
+
+```bash
+# 1. Pull latest code
+git pull
+
+# 2. Stop containers
+docker compose down
+
+# 3. Rebuild with new code
+docker compose build
+
+# 4. Start updated containers
+docker compose up -d
+```
+
+**Important Notes:**
+- ✅ **Models preserved**: Downloaded Ollama models are kept (no re-download needed)
+- ✅ **Data preserved**: All configuration and cache files maintained
+- ✅ **Quick process**: Only rebuilds application code, not base images
+
+## �🛑 Stopping the Application
 
 ```bash
 # Stop all services
