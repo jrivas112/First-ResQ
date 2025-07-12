@@ -5,8 +5,17 @@ import requests
 import os
 from dotenv import load_dotenv
 load_dotenv()
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Or specify ["http://127.0.0.1:5500"] for tighter security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Request model for attachments
 class Attachment(BaseModel):
