@@ -1,0 +1,79 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ANYTHINGLLM_HOST=host.docker.internal
+      - OLLAMA_HOST=ollama:11434
+      - QDRANT_HOST=qdrant:6333
+    env_file:
+      - ./backend/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - appnet
+    depends_on:
+      - ollama
+      - qdrant
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:80"
+    networks:
+      - appnet
+    depends_on:
+      - backend
+
+  # Local LLM service using Ollama (CPU-only)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - appnet
+    # Use default ollama serve command
+    # GPU support removed for WSL compatibility
+
+  # Vector database for RAG
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - appnet
+
+  # Optional: Web UI for Ollama
+  ollama-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: ollama-webui
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - ollama_webui_data:/app/backend/data
+    networks:
+      - appnet
+    depends_on:
+      - ollama
+networks:
+  appnet:
+    driver: bridge
+
+volumes:
+  ollama_data:
+  qdrant_data:
+  ollama_webui_data:

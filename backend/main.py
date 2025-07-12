@@ -33,7 +33,8 @@ class ChatRequest(BaseModel):
 
 # Configs
 ANYTHINGLLM_API_KEY = os.getenv("ANYTHINGLLM_API_KEY", "YOUR_API_KEY")
-API_URL = "http://localhost:3001/api/v1/workspace/qhelper/chat"
+ANYTHINGLLM_HOST = os.getenv("ANYTHINGLLM_HOST", "host.docker.internal")
+API_URL = f"http://{ANYTHINGLLM_HOST}:3001/api/v1/workspace/qhelper/chat"
 
 @app.post("/ask")
 async def ask_question(payload: ChatRequest):
