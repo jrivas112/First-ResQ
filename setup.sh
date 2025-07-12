@@ -46,7 +46,7 @@ fi
 
 # Check for port conflicts
 echo "🔍 Checking for port conflicts..."
-PORTS=(3000 8000 8080 6333 11434)
+PORTS=(3000 8000 8080 11434)
 CONFLICTS=()
 
 for port in "${PORTS[@]}"; do
@@ -101,20 +101,25 @@ for i in {1..6}; do
 done
 
 if [ "$OLLAMA_READY" = true ]; then
-    # Download a model
-    echo "📦 Downloading AI model (phi3:mini)..."
+    # Download a model (try mistral first, fallback to phi3:mini)
+    echo "📦 Downloading AI model..."
     echo "   This may take a few minutes..."
     
-    if docker exec ollama ollama pull phi3:mini; then
-        echo "✅ Model downloaded successfully!"
+    # Try to download mistral first (better quality)
+    if docker exec ollama ollama pull mistral:latest; then
+        echo "✅ Mistral model downloaded successfully!"
+    elif docker exec ollama ollama pull phi3:mini; then
+        echo "✅ Phi3:mini model downloaded successfully!"
     else
-        echo "⚠️  Model download failed, but you can download it manually later"
-        echo "   Run: docker exec ollama ollama pull phi3:mini"
+        echo "⚠️  Model download failed, but you can download manually later"
+        echo "   Try: docker exec ollama ollama pull mistral:latest"
+        echo "   Or:  docker exec ollama ollama pull phi3:mini"
     fi
 else
     echo "⚠️  Ollama not responding after 60 seconds"
     echo "   Services are running, but you may need to download models manually"
-    echo "   Try: docker exec ollama ollama pull phi3:mini"
+    echo "   Try: docker exec ollama ollama pull mistral:latest"
+    echo "   Or:  docker exec ollama ollama pull phi3:mini"
 fi
 
 echo ""
@@ -127,7 +132,6 @@ echo "📱 Access Points:"
 echo "   Main App:        http://localhost:3000 (✅ Works Offline)"
 echo "   Backend API:     http://localhost:8000 (✅ Works Offline)"
 echo "   Ollama Web UI:   http://localhost:8080 (✅ Works Offline)"
-echo "   Qdrant Dashboard: http://localhost:6333/dashboard (✅ Works Offline)"
 echo ""
 echo "🔌 Offline Features:"
 echo "   ✅ Pure offline operation - NO INTERNET REQUIRED"
@@ -147,6 +151,8 @@ echo "   View logs:       docker compose logs"
 echo "   Stop services:   docker compose down"
 echo "   Restart:         docker compose restart"
 echo "   Download models: docker exec ollama ollama pull model_name"
+echo "   List models:     docker exec ollama ollama list"
+echo "   Remove model:    docker exec ollama ollama rm model_name"
 echo "   Clean reset:     docker compose down -v && docker compose up -d --build"
 echo ""
 echo "🔧 Troubleshooting:"

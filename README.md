@@ -119,7 +119,6 @@ Once everything is running, you can access:
 | **API Documentation** | http://localhost:8000/docs | Interactive API docs |
 | **Health Check** | http://localhost:8000/health | System status |
 | **Ollama Web UI** | http://localhost:8080 | Model management interface |
-| **Qdrant Dashboard** | http://localhost:6333/dashboard | Vector database admin |
 
 ## 💬 Using the Application
 
@@ -250,9 +249,10 @@ QHelper-AI/
 │   ├── main.py             # FastAPI application
 │   ├── enhanced_rag.py     # Enhanced RAG + Ollama system
 │   ├── simple_rag.py       # Fallback CSV-only RAG system
-│   ├── local_rag.py        # Alternative Qdrant-based RAG (unused)
 │   ├── firstaidqa-*.csv    # First aid Q&A dataset
-│   └── getdatabase.py      # Database utilities
+│   ├── main.py             # FastAPI backend application
+│   ├── requirements.txt    # Python dependencies
+│   └── dockerfile          # Backend container configuration
 ├── frontend/               # Static web frontend
 │   ├── dockerfile         # Frontend container config
 │   ├── index.html         # Main HTML page
@@ -260,6 +260,240 @@ QHelper-AI/
 │   └── nginx.conf         # Web server config
 └── style.css              # Application styling
 ```
+
+## 🧠 RAG Systems Overview
+
+This project includes multiple Retrieval-Augmented Generation (RAG) implementations, each designed for different scenarios and capabilities:
+
+### 📊 `enhanced_rag.py` - **Primary System** (Hybrid AI + Knowledge Base)
+**Purpose**: Main production RAG system combining CSV knowledge with Ollama LLM reasoning
+- **Technology**: TF-IDF vectorization + Ollama AI integration
+- **Capabilities**: 
+  - Searches CSV knowledge base for relevant first aid information
+  - Enhances answers using Ollama LLM for better context and reasoning
+  - Provides intelligent fallback responses when no exact matches found
+  - Offers three response modes: RAG+Ollama, Ollama-only, or RAG-only
+- **Use Case**: Primary system used by the main application
+- **Advantages**: Best balance of accuracy, intelligence, and offline capability
+
+### 🔄 Enhanced RAG Workflow
+
+The Enhanced RAG system follows this detailed workflow when processing user questions:
+
+#### 1. **Initialization Phase**
+```
+🚀 System Startup
+├── Load CSV dataset (641 first aid Q&A pairs)
+├── Generate/load TF-IDF vectors for questions
+├── Test Ollama connection and discover available models
+├── Select best model (mistral:latest → phi3:mini → fallback)
+└── Initialize complete ✅
+```
+
+#### 2. **Query Processing Phase**
+```
+📝 User asks: "How do I treat a burn?"
+├── Preprocess text (lowercase, clean, normalize)
+├── Convert to TF-IDF vector
+├── Calculate cosine similarity with all knowledge base questions
+└── Return top 3 most similar questions with similarity scores
+```
+
+#### 3. **Response Generation Phase**
+The system uses a **decision tree** to determine the best response method:
+
+**🎯 Decision Logic:**
+```
+High similarity match found (>0.05)?
+├── YES: Use RAG + Ollama Enhancement
+│   ├── Extract best matching answer from knowledge base
+│   ├── Create enhanced prompt with context
+│   ├── Send to Ollama via /api/chat endpoint
+│   └── Return: AI-enhanced response with knowledge base context
+│
+└── NO: Use Ollama-Only Mode
+    ├── Create general first aid prompt
+    ├── Send to Ollama for reasoning
+    └── Return: AI-generated response without specific knowledge base match
+```
+
+#### 4. **Ollama Integration Details**
+```
+🤖 Ollama API Call Process:
+├── Endpoint: /api/chat (instead of /api/generate for better completion)
+├── Format: Message-based conversation structure
+├── Parameters:
+│   ├── Model: mistral:latest (preferred) or best available
+│   ├── Temperature: 0.7 (balanced creativity/consistency)
+│   ├── num_predict: 500 (reasonable response length)
+│   ├── top_k: 40, top_p: 0.9 (quality controls)
+│   └── No stop sequences (allow natural completion)
+├── Timeout: 60 seconds (accommodate model thinking time)
+└── Response: Extract content from message.content field
+```
+
+#### 5. **Fallback Mechanisms**
+```
+🛡️ Multi-Level Fallback System:
+├── Level 1: Ollama unavailable → Use pure RAG (knowledge base only)
+├── Level 2: No knowledge base match → General safety advice
+├── Level 3: Complete system failure → Error message with safety guidance
+└── Always available: RAG-only mode toggle for fastest responses
+```
+
+#### 6. **Response Assembly**
+```
+📤 Final Response Structure:
+├── answer: "Detailed first aid instructions..."
+├── confidence: 0.85 (similarity score + AI enhancement boost)
+├── source: "AI enhanced with knowledge from similar case"
+├── method: "rag_plus_ollama" | "ollama_only" | "rag_only" | "fallback"
+├── similar_questions: ["Related question 1", "Related question 2", ...]
+└── Additional metadata for debugging and transparency
+```
+
+## 📊 Confidence Level Calculation
+
+The system calculates confidence scores to indicate how reliable each response is. Understanding these scores helps users assess the trustworthiness of the provided first aid advice.
+
+### **Confidence Score Ranges**
+
+| Score Range | Meaning | Response Quality |
+|-------------|---------|------------------|
+| **0.8 - 1.0** | 🟢 **High Confidence** | Excellent match with knowledge base + AI enhancement |
+| **0.5 - 0.79** | 🟡 **Medium Confidence** | Good AI reasoning or strong knowledge base match |
+| **0.1 - 0.49** | 🟠 **Low Confidence** | Weak knowledge base match, limited context |
+| **0.0** | 🔴 **No Confidence** | Fallback response, seek professional help |
+
+### **How Confidence is Calculated**
+
+#### **Method 1: RAG + Ollama (rag_plus_ollama)**
+```
+Base Confidence = TF-IDF Similarity Score (0.0 - 1.0)
+Enhancement Boost = +0.3 (for AI reasoning improvement)
+Final Confidence = min(0.9, Base + Enhancement)
+
+Example:
+├── TF-IDF similarity: 0.65 (good match for "bleeding treatment")
+├── AI enhancement: +0.30 (Ollama expands and improves response)
+└── Final confidence: min(0.9, 0.65 + 0.30) = 0.9 🟢
+```
+
+#### **Method 2: Ollama Only (ollama_only)**
+```
+Fixed Confidence = 0.5 (medium confidence)
+Reason: Pure AI reasoning without specific knowledge base context
+
+Example:
+├── No strong knowledge base match found (similarity < 0.05)
+├── Ollama generates response from general training
+└── Confidence: 0.5 🟡 (reliable AI but no specific first aid data)
+```
+
+#### **Method 3: RAG Only (rag_only)**
+```
+Confidence = TF-IDF Similarity Score (direct match)
+
+Example:
+├── TF-IDF similarity: 0.72 (good match in knowledge base)
+├── Ollama unavailable, using direct CSV answer
+└── Confidence: 0.72 🟡 (good knowledge match but no AI enhancement)
+```
+
+#### **Method 4: Fallback (fallback)**
+```
+Confidence = 0.0 (no confidence)
+Reason: No knowledge base match + no AI available
+
+Example:
+├── Question: "How to fix my car engine?"
+├── No relevant first aid knowledge found
+└── Confidence: 0.0 🔴 (recommends consulting professionals)
+```
+
+### **Confidence Factors**
+
+#### **TF-IDF Similarity Thresholds**
+- **≥ 0.1**: Minimum threshold for knowledge base usage
+- **≥ 0.05**: Minimum threshold for Ollama enhancement
+- **< 0.05**: Triggers Ollama-only or fallback mode
+
+#### **Response Quality Indicators**
+- **High confidence (0.8+)**: Use advice with confidence, but still verify for serious emergencies
+- **Medium confidence (0.5-0.79)**: Good guidance, consider additional verification
+- **Low confidence (0.1-0.49)**: Basic guidance only, seek professional help
+- **No confidence (0.0)**: Do not rely on advice, consult medical professionals immediately
+
+### **Practical Usage Examples**
+
+```json
+{
+  "question": "How do I stop severe bleeding?",
+  "confidence": 0.87,
+  "method": "rag_plus_ollama",
+  "interpretation": "🟢 High confidence - Strong knowledge base match + AI enhancement"
+}
+
+{
+  "question": "What should I do if someone faints?",
+  "confidence": 0.52,
+  "method": "ollama_only", 
+  "interpretation": "🟡 Medium confidence - AI reasoning without specific match"
+}
+
+{
+  "question": "How to treat a broken bone?",
+  "confidence": 0.23,
+  "method": "rag_only",
+  "interpretation": "🟠 Low confidence - Weak knowledge match, no AI available"
+}
+
+{
+  "question": "How to repair a car?", 
+  "confidence": 0.0,
+  "method": "fallback",
+  "interpretation": "🔴 No confidence - Not a first aid question, seek appropriate help"
+}
+```
+
+#### 7. **Performance Optimizations**
+- **Vector Caching**: TF-IDF vectors cached to disk for instant startup
+- **Model Selection**: Automatic best-model detection with fallback hierarchy
+- **Connection Pooling**: Persistent connections to Ollama service
+- **Smart Prompting**: Context-aware prompts that guide AI responses
+- **Response Streaming**: Uses chat endpoint for more complete responses
+
+#### 8. **Quality Assurance**
+- **Debug Logging**: Comprehensive request/response logging for troubleshooting
+- **Health Checks**: Continuous monitoring of Ollama model availability
+- **Graceful Degradation**: System remains functional even if AI services fail
+- **Response Validation**: Ensures non-empty, meaningful responses before returning
+
+### 🔍 `simple_rag.py` - **Lightweight Fallback** (Knowledge Base Only)
+**Purpose**: Lightweight backup system when AI services are unavailable
+- **Technology**: TF-IDF vectorization only (no external AI dependencies)
+- **Capabilities**:
+  - Fast text preprocessing and similarity matching
+  - Cached TF-IDF vectors for quick startup
+  - Direct CSV knowledge base searches
+  - Lower similarity thresholds for broader matching
+- **Use Case**: Fallback when Ollama is down or unavailable
+- **Advantages**: Ultra-fast responses, minimal resource usage, guaranteed availability
+
+###  System Selection Logic
+
+The application automatically selects the best available system:
+
+1. **Primary**: `enhanced_rag.py` - Used when Ollama is available (RAG + AI enhancement)
+2. **Fallback**: `simple_rag.py` - Used when Ollama is unavailable (knowledge base only)
+
+### 🎯 System Comparison
+
+| System | Best For | Performance | Quality | Dependencies |
+|--------|----------|-------------|---------|--------------|
+| `enhanced_rag.py` | Production use | Medium | Highest | Ollama required |
+| `simple_rag.py` | Offline/backup | Fastest | Good | None |
+| `local_rag.py` | Large-scale future use | Varies | Good | Vector DB + Ollama |
 
 ## 🔄 Development Workflow
 
@@ -322,7 +556,6 @@ If you encounter issues:
 ## 🔗 Additional Resources
 
 - [Ollama Documentation](https://ollama.ai/docs)
-- [Qdrant Documentation](https://qdrant.tech/documentation/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 

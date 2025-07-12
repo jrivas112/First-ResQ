@@ -6,6 +6,7 @@ import pickle
 import os
 import re
 import requests
+import json
 from typing import List, Dict
 
 class EnhancedFirstAidRAG:
@@ -21,6 +22,8 @@ class EnhancedFirstAidRAG:
         self.df = None
         self.question_vectors = None
         self.vectors_file = "question_vectors.pkl"
+        self.available_models = []
+        self.preferred_models = ["mistral:latest", "mistral", "phi3:mini", "llama2:7b", "llama2"]  # Order by preference
         
     def preprocess_text(self, text: str) -> str:
         """Simple text preprocessing"""
@@ -79,29 +82,94 @@ class EnhancedFirstAidRAG:
         
         return results
     
-    def query_ollama(self, prompt: str, model: str = "phi3:mini") -> str:
+    def get_best_model(self) -> str:
+        """Get the best available model from our preferred list"""
+        for model in self.preferred_models:
+            if model in self.available_models:
+                return model
+        
+        # If none of our preferred models are available, use the first available one
+        if self.available_models:
+            return self.available_models[0]
+        
+        # Fallback to phi3:mini (shouldn't happen if we check properly)
+        return "phi3:mini"
+    
+    def query_ollama(self, prompt: str, model: str = None) -> str:
         """Query Ollama LLM"""
+        if model is None:
+            model = self.get_best_model()
+            
         try:
+            # Adjust parameters based on model type
+            options = {
+                "temperature": 0.7,
+                "top_p": 0.9
+            }
+            
+            # Model-specific optimizations - minimal options to avoid truncation
+            if "mistral" in model.lower():
+                options = {
+                    "temperature": 0.7,
+                    "top_p": 0.9
+                }
+                # Remove all limits and stop sequences to test
+            elif "phi3" in model.lower():
+                options["temperature"] = 0.7
+                options["stop"] = ["\n\n", "Question:", "Q:"]
+            else:
+                options["stop"] = ["\n\n"]
+            
+            # Switch back to /api/generate with proper streaming handling
             response = requests.post(
                 f"http://{self.ollama_host}/api/generate",
                 json={
                     "model": model,
                     "prompt": prompt,
-                    "stream": False,
-                    "options": {
-                        "temperature": 0.7,
-                        "num_predict": 200,  # Use num_predict instead of max_tokens
-                        "top_p": 0.9,
-                        "stop": ["\n\n"]  # Stop at double newline for concise responses
-                    }
+                    "stream": True,  # Use streaming but handle it properly
+                    "options": options
                 },
-                timeout=15  # Reduced timeout to 15 seconds
+                timeout=60,
+                stream=True  # Enable streaming in requests 
             )
             
             if response.status_code == 200:
-                return response.json().get("response", "")
+                full_response = ""
+                final_data = {}
+                
+                # Process streaming response line by line
+                for line in response.iter_lines():
+                    if line:
+                        try:
+                            chunk_data = json.loads(line.decode('utf-8'))
+                            
+                            # Accumulate response text
+                            if 'response' in chunk_data:
+                                full_response += chunk_data['response']
+                            
+                            # Store final metadata when done
+                            if chunk_data.get('done', False):
+                                final_data = chunk_data
+                                break
+                                
+                        except json.JSONDecodeError:
+                            continue
+                
+                # Debug logging
+                print(f"=== OLLAMA GENERATE STREAMING DEBUG ===")
+                print(f"Prompt length: {len(prompt)} chars")
+                print(f"Model: {model}")
+                print(f"Options: {options}")
+                print(f"Response length: {len(full_response)} chars")
+                print(f"Done: {final_data.get('done', 'unknown')}")
+                print(f"Total duration: {final_data.get('total_duration', 'unknown')}")
+                print(f"Eval count: {final_data.get('eval_count', 'unknown')}")
+                print(f"Full response: '{full_response}'")
+                print(f"=== END STREAMING DEBUG ===")
+                
+                return full_response if full_response else None
             else:
-                print(f"Ollama error: {response.status_code} - {response.text}")
+                print(f"Ollama generate error: {response.status_code} - {response.text}")
                 return None
         except requests.exceptions.Timeout:
             print("Ollama request timed out (15s)")
@@ -142,11 +210,18 @@ class EnhancedFirstAidRAG:
         """Get answer using Ollama with RAG context"""
         if not similar_questions or similar_questions[0]['similarity'] < 0.05:
             # No good matches, use Ollama alone
-            prompt = f"""First aid question: {query}
+            prompt = f"""You are a helpful first aid assistant. Please provide a clear, practical response to this first aid question:
 
-Provide a brief, safe first aid response. If serious, advise seeking medical help.
+{query}
 
-Answer:"""
+Format your response using valid HTML with:
+- Use <h3> for section headings
+- Use <ol> or <ul> for step-by-step instructions
+- Use <strong> for important warnings or key points
+- Use <p> for paragraphs
+- Use <em> for emphasis when needed
+
+Provide specific steps and safety information. If this is a serious emergency, advise seeking immediate medical help."""
             
             ollama_response = self.query_ollama(prompt)
             if ollama_response:
@@ -161,13 +236,22 @@ Answer:"""
             # Use RAG context with Ollama
             context = similar_questions[0]['answer']  # Just use the best match
             
-            prompt = f"""Based on this first aid knowledge: {context}
+            prompt = f"""You are a first aid assistant. Based on this relevant information from our knowledge base:
 
-Question: {query}
+{context}
 
-Provide a clear, helpful response based on this information.
+Now answer this question with clear, practical steps:
 
-Answer:"""
+{query}
+
+Format your response using valid HTML with:
+- Use <h3> for section headings
+- Use <ol> or <ul> for step-by-step instructions  
+- Use <strong> for important warnings or key points
+- Use <p> for paragraphs
+- Use <em> for emphasis when needed
+
+Use the knowledge base information and expand on it with helpful details."""
             
             ollama_response = self.query_ollama(prompt)
             if ollama_response:
@@ -200,7 +284,7 @@ Answer:"""
             return False
     
     def test_ollama_connection(self) -> bool:
-        """Test if Ollama is available and has the required model"""
+        """Test if Ollama is available and discover available models"""
         try:
             # First check if Ollama is responding
             response = requests.get(f"http://{self.ollama_host}/api/tags", timeout=5)
@@ -208,17 +292,27 @@ Answer:"""
                 print(f"Ollama not responding: {response.status_code}")
                 return False
             
-            # Check if our preferred model is available
+            # Get all available models
             models = response.json().get("models", [])
-            model_names = [model.get("name", "") for model in models]
+            self.available_models = [model.get("name", "") for model in models]
             
-            if "phi3:mini" in model_names:
-                print("Found phi3:mini model")
-                # Test a simple query
-                test_result = self.query_ollama("Test", "phi3:mini")
-                return test_result is not None
+            if not self.available_models:
+                print("No models found in Ollama")
+                return False
+            
+            print(f"Available models: {self.available_models}")
+            
+            # Find the best model to use
+            best_model = self.get_best_model()
+            print(f"Selected model: {best_model}")
+            
+            # Test a simple query with the best model using chat endpoint
+            test_result = self.query_ollama("Test connection", best_model)
+            if test_result is not None:
+                print(f"✅ Model {best_model} is working")
+                return True
             else:
-                print(f"phi3:mini model not found. Available models: {model_names}")
+                print(f"❌ Model {best_model} failed test query")
                 return False
                 
         except Exception as e:
