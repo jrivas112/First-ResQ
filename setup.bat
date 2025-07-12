@@ -109,45 +109,25 @@ for /l %%i in (1,1,6) do (
 
 :ollama_ready
 if defined OLLAMA_READY (
-    echo Downloading AI models for maximum speed...
-    echo    1. Downloading qwen2:1.5b (ultra-fast, 934MB)...
+    echo Downloading ultra-fast AI model...
+    echo    Downloading qwen2:1.5b (ultra-fast, 934MB)...
     docker exec ollama ollama pull qwen2:1.5b
     if %ERRORLEVEL% EQU 0 (
-        echo qwen2:1.5b downloaded successfully.
+        echo ✅ qwen2:1.5b downloaded successfully for maximum speed!
     ) else (
-        echo qwen2:1.5b failed, continuing...
-    )
-    
-    echo    2. Downloading phi3:mini (fast backup, 2.2GB)...
-    docker exec ollama ollama pull phi3:mini
-    if %ERRORLEVEL% EQU 0 (
-        echo phi3:mini downloaded successfully.
-    ) else (
-        echo phi3:mini failed, continuing...
-    )
-    
-    echo    3. Downloading mistral:latest (quality backup, 4.1GB)...
-    docker exec ollama ollama pull mistral:latest
-    if %ERRORLEVEL% EQU 0 (
-        echo mistral:latest downloaded successfully.
-    ) else (
-        echo mistral:latest failed, continuing...
-    )
-    
-    echo Model downloads complete. System prioritizes fastest model automatically.        ) else (
-            echo WARNING: Some model downloads failed. You can retry later:
+        echo ⚠️  qwen2:1.5b download failed. You can retry later:
+        echo     docker exec ollama ollama pull qwen2:1.5b
+    )        ) else (
+            echo ⚠️  qwen2:1.5b download failed. You can retry later:
             echo     docker exec ollama ollama pull qwen2:1.5b
-            echo     docker exec ollama ollama pull phi3:mini
-            echo     docker exec ollama ollama pull mistral:latest
         )
     ) else (
-        echo Models downloaded successfully for ultra-fast responses.
+        echo ✅ qwen2:1.5b ready for ultra-fast responses!
     )
 ) else (
     echo WARNING: Ollama not responding after retries.
-    echo    You can manually pull models later:
+    echo    You can manually pull the model later:
     echo     docker exec ollama ollama pull qwen2:1.5b
-    echo     docker exec ollama ollama pull phi3:mini
     echo     docker exec ollama ollama pull mistral:latest
 )
 echo.

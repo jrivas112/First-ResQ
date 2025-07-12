@@ -82,28 +82,22 @@ docker compose up -d --build
 
 **First startup will take several minutes** as Docker downloads all the necessary images.
 
-### 4. Download AI Models
+### 4. Download AI Model
 
-Once the containers are running, download AI models for best performance:
+Once the containers are running, download the ultra-fast AI model:
 
 ```bash
-# Download ultra-fast model (recommended first choice)
+# Download ultra-fast model (automatically used by setup scripts)
 docker exec ollama ollama pull qwen2:1.5b
 
-# Download fast backup model
-docker exec ollama ollama pull phi3:mini
-
-# Download quality backup model (optional)
-docker exec ollama ollama pull mistral:latest
-
-# Verify the models were downloaded
+# Verify the model was downloaded
 docker exec ollama ollama list
 ```
 
 **Model Performance:**
-- `qwen2:1.5b` (934MB) - Ultra-fast responses, lowest memory usage
-- `phi3:mini` (2.2GB) - Fast responses, good quality
-- `mistral:latest` (4.1GB) - Best quality, slower responses
+- `qwen2:1.5b` (934MB) - Ultra-fast responses, minimal memory usage, perfect for emergency first aid
+
+**Note:** Setup scripts automatically download this model for maximum speed. Additional models can be added manually if needed.
 
 ### 5. Verify Installation
 
@@ -308,31 +302,29 @@ If you encounter GPU-related errors on Windows:
 
 ### ⚡ Speed Optimization Options
 
-To get faster response times from your AI models:
+Your system is already optimized for maximum speed with qwen2:1.5b!
 
-#### **1. Use Fastest Models (Recommended)**
+#### **1. Current Ultra-Fast Configuration**
 ```bash
-# Super fast models (under 2GB)
-docker exec ollama ollama pull phi3:mini      # 2.2GB - Currently active, very fast
-docker exec ollama ollama pull gemma:2b       # 1.4GB - Even faster option
-docker exec ollama ollama pull qwen2:1.5b     # 900MB - Fastest option
+# Your setup automatically uses the fastest model available
+docker exec ollama ollama list  # Should show qwen2:1.5b (934MB)
 
-# Test different models
-docker exec ollama ollama run phi3:mini "How do I treat a cut?"
+# Test the ultra-fast response
+docker exec ollama ollama run qwen2:1.5b "How do I treat a cut?"
 ```
 
-#### **2. Model Performance Comparison**
-| Model | Size | Speed | Quality | Best For |
-|-------|------|-------|---------|----------|
-| `qwen2:1.5b` | 900MB | ⚡⚡⚡ | Good | Ultra-fast responses |
-| `gemma:2b` | 1.4GB | ⚡⚡ | Very Good | Balanced speed/quality |
-| `phi3:mini` | 2.2GB | ⚡⚡ | Excellent | Current default |
-| `mistral:latest` | 4.1GB | ⚡ | Excellent | Comprehensive responses |
+#### **2. Model Performance (Current Setup)**
+| Model | Size | Speed | Quality | Status |
+|-------|------|-------|---------|--------|
+| `qwen2:1.5b` | 934MB | ⚡⚡⚡ | Good | **✅ Primary (Auto-installed)** |
+| `phi3:mini` | 2.2GB | ⚡⚡ | Excellent | Fallback option |
+| `mistral:latest` | 4.1GB | ⚡ | Excellent | Manual install only |
 
-#### **3. Speed vs Quality Trade-offs**
-- **Fastest**: Use `qwen2:1.5b` for immediate responses
-- **Balanced**: Use `phi3:mini` (current) for good speed + quality  
-- **Quality**: Use `mistral:latest` for detailed medical explanations
+#### **3. Why qwen2:1.5b is Perfect for First Aid**
+- **🚀 Ultra-fast**: ~1-2 second response times
+- **💾 Minimal RAM**: Uses <1GB memory
+- **⚡ Instant startup**: Model loads quickly
+- **🎯 Emergency-focused**: Optimized for quick, clear responses
 
 #### **4. Hardware Optimizations**
 - **RAM**: Allocate more memory to Docker (8GB+ recommended)

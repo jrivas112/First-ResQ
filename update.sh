@@ -47,7 +47,7 @@ if ! docker compose up -d; then
 fi
 
 echo
-echo "[5/5] Checking for missing AI models..."
+echo "[5/5] Checking for missing AI model..."
 echo "Waiting for Ollama to be ready..."
 sleep 10
 
@@ -55,24 +55,13 @@ sleep 10
 if ! docker exec ollama ollama list | grep -q "qwen2:1.5b"; then
     echo "Installing ultra-fast qwen2:1.5b model..."
     if docker exec ollama ollama pull qwen2:1.5b; then
-        echo "✅ qwen2:1.5b downloaded successfully"
+        echo "✅ qwen2:1.5b downloaded successfully for maximum speed!"
     else
-        echo "⚠️  qwen2:1.5b download failed"
+        echo "⚠️  qwen2:1.5b download failed. You can retry with:"
+        echo "   docker exec ollama ollama pull qwen2:1.5b"
     fi
 else
-    echo "✅ qwen2:1.5b already available"
-fi
-
-# Check if phi3:mini is available
-if ! docker exec ollama ollama list | grep -q "phi3:mini"; then
-    echo "Installing phi3:mini backup model..."
-    if docker exec ollama ollama pull phi3:mini; then
-        echo "✅ phi3:mini downloaded successfully"
-    else
-        echo "⚠️  phi3:mini download failed"
-    fi
-else
-    echo "✅ phi3:mini already available"
+    echo "✅ qwen2:1.5b already available for ultra-fast responses"
 fi
 
 echo

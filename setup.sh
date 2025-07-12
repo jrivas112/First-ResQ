@@ -101,41 +101,22 @@ for i in {1..6}; do
 done
 
 if [ "$OLLAMA_READY" = true ]; then
-    # Download AI models for maximum speed
-    echo "📦 Downloading AI models for maximum speed..."
+    # Download ultra-fast AI model
+    echo "📦 Downloading ultra-fast AI model..."
     echo "   This may take a few minutes..."
     
-    # Download qwen2:1.5b first (ultra-fast)
-    echo "   1. Downloading qwen2:1.5b (ultra-fast, 934MB)..."
+    # Download qwen2:1.5b (ultra-fast)
+    echo "   Downloading qwen2:1.5b (ultra-fast, 934MB)..."
     if docker exec ollama ollama pull qwen2:1.5b; then
-        echo "✅ qwen2:1.5b downloaded successfully!"
+        echo "✅ qwen2:1.5b downloaded successfully for maximum speed!"
     else
-        echo "⚠️  qwen2:1.5b failed, continuing..."
+        echo "⚠️  qwen2:1.5b download failed. You can retry later:"
+        echo "   docker exec ollama ollama pull qwen2:1.5b"
     fi
-    
-    # Download phi3:mini (fast backup)
-    echo "   2. Downloading phi3:mini (fast backup, 2.2GB)..."
-    if docker exec ollama ollama pull phi3:mini; then
-        echo "✅ phi3:mini downloaded successfully!"
-    else
-        echo "⚠️  phi3:mini failed, continuing..."
-    fi
-    
-    # Download mistral (quality backup)
-    echo "   3. Downloading mistral:latest (quality backup, 4.1GB)..."
-    if docker exec ollama ollama pull mistral:latest; then
-        echo "✅ mistral:latest downloaded successfully!"
-    else
-        echo "⚠️  mistral:latest failed, continuing..."
-    fi
-    
-    echo "✅ Model downloads complete. System prioritizes fastest model automatically."
 else
     echo "⚠️  Ollama not responding after 60 seconds"
-    echo "   Services are running, but you may need to download models manually"
-    echo "   Try: docker exec ollama ollama pull qwen2:1.5b"
-    echo "   Or:  docker exec ollama ollama pull phi3:mini"
-    echo "   Or:  docker exec ollama ollama pull mistral:latest"
+    echo "   Services are running, but you may need to download the model manually:"
+    echo "   docker exec ollama ollama pull qwen2:1.5b"
 fi
 
 echo ""

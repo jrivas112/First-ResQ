@@ -54,7 +54,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [5/5] Checking for missing AI models...
+echo [5/5] Checking for missing AI model...
 echo Waiting for Ollama to be ready...
 timeout /t 10 /nobreak >nul
 
@@ -64,26 +64,13 @@ if errorlevel 1 (
     echo Installing ultra-fast qwen2:1.5b model...
     docker exec ollama ollama pull qwen2:1.5b
     if errorlevel 0 (
-        echo ✅ qwen2:1.5b downloaded successfully
+        echo ✅ qwen2:1.5b downloaded successfully for maximum speed!
     ) else (
-        echo ⚠️  qwen2:1.5b download failed
+        echo ⚠️  qwen2:1.5b download failed. You can retry with:
+        echo     docker exec ollama ollama pull qwen2:1.5b
     )
 ) else (
-    echo ✅ qwen2:1.5b already available
-)
-
-REM Check if phi3:mini is available
-docker exec ollama ollama list | findstr "phi3:mini" >nul
-if errorlevel 1 (
-    echo Installing phi3:mini backup model...
-    docker exec ollama ollama pull phi3:mini
-    if errorlevel 0 (
-        echo ✅ phi3:mini downloaded successfully
-    ) else (
-        echo ⚠️  phi3:mini download failed
-    )
-) else (
-    echo ✅ phi3:mini already available
+    echo ✅ qwen2:1.5b already available for ultra-fast responses
 )
 
 echo.
