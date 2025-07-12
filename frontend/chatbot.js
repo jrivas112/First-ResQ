@@ -36,7 +36,6 @@
 async function sendMessage() {
   const input = document.getElementById("user-input");
   const chatBox = document.getElementById("chat-box");
-  const useLocal = document.getElementById("use-local")?.checked || false;
 
   const userMessage = input.value;
   if (!userMessage) return;
@@ -44,9 +43,8 @@ async function sendMessage() {
   // Display user message
   chatBox.innerHTML += `<div class="bubble user"><strong>You:</strong> ${userMessage}</div>`;
 
-  // Choose endpoint based on toggle
-  const endpoint = useLocal ? "http://localhost:8000/ask-local" : "http://localhost:8000/ask";
-  const aiType = useLocal ? "Local AI" : "External AI";
+  // Use local AI endpoint only
+  const endpoint = "http://localhost:8000/ask";
 
   // Send to backend
   try {
@@ -89,11 +87,12 @@ async function sendMessage() {
     }
 
     chatBox.innerHTML += `<div class="bubble bot">
-      <strong>QHelper (${aiType}):</strong> ${botReply}${methodInfo}
+      <strong>QHelper AI:</strong> ${botReply}${methodInfo}
     </div>`;
   } catch (err) {
     chatBox.innerHTML += `<div class="bubble bot">
-      <strong>QHelper:</strong> Something went wrong: ${err.message}
+      <strong>QHelper AI:</strong> Network error: ${err.message}
+      <br><small><em>The local AI should work without internet. Please check if the backend is running.</em></small>
     </div>`;
   }
 
@@ -106,3 +105,11 @@ function handleKey(event) {
         sendMessage();
     }
 }
+
+// Set status on page load
+document.addEventListener("DOMContentLoaded", function() {
+  const statusText = document.getElementById("status-text");
+  if (statusText) {
+    statusText.innerHTML = "🟢 Offline-First AI Assistant Ready";
+  }
+});

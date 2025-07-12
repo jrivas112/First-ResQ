@@ -28,19 +28,10 @@ fi
 echo "✅ Docker found: $(docker --version)"
 echo "✅ Docker Compose found: $(docker compose version --short)"
 
-# Create .env file if it doesn't exist
-if [ ! -f "backend/.env" ]; then
-    echo "📝 Creating environment file..."
-    mkdir -p backend
-    cat > backend/.env << EOF
-ANYTHINGLLM_API_KEY=your_api_key_here
-ANYTHINGLLM_WORKSPACE_ID=qhelper
-EOF
-    echo "✅ Created backend/.env file"
-    echo "   You can edit this file to add your AnythingLLM API key if needed"
-else
-    echo "✅ Environment file already exists"
-fi
+# Create directories if they don't exist
+mkdir -p backend
+
+echo "📝 Checking setup..."
 
 # Build and start services
 echo "🏗️  Building and starting services..."
@@ -130,18 +121,26 @@ echo ""
 echo "🎉 Setup Complete! 🎉"
 echo "===================="
 echo ""
-echo "Your First Res-Q application is now running!"
+echo "Your First Res-Q application is now running OFFLINE-CAPABLE!"
 echo ""
 echo "📱 Access Points:"
-echo "   Main App:        http://localhost:3000"
-echo "   Backend API:     http://localhost:8000"
-echo "   Ollama Web UI:   http://localhost:8080"
-echo "   Qdrant Dashboard: http://localhost:6333/dashboard"
+echo "   Main App:        http://localhost:3000 (✅ Works Offline)"
+echo "   Backend API:     http://localhost:8000 (✅ Works Offline)"
+echo "   Ollama Web UI:   http://localhost:8080 (✅ Works Offline)"
+echo "   Qdrant Dashboard: http://localhost:6333/dashboard (✅ Works Offline)"
+echo ""
+echo "🔌 Offline Features:"
+echo "   ✅ Pure offline operation - NO INTERNET REQUIRED"
+echo "   ✅ Local AI with CSV knowledge base (1000+ Q&A pairs)"
+echo "   ✅ Ollama LLM reasoning for complex questions"
+echo "   ✅ Complete first aid assistance without connectivity"
+echo "   ✅ Smart fallbacks and error handling"
 echo ""
 echo "💡 Next Steps:"
 echo "   1. Open http://localhost:3000 in your browser"
-echo "   2. Try asking: 'How do I treat a burn?'"
-echo "   3. Visit http://localhost:8080 to manage AI models"
+echo "   2. Ask first aid questions - everything works offline!"
+echo "   3. Try: 'How do I treat a burn?' or 'Someone is choking'"
+echo "   4. Test offline: Disconnect internet - still works perfectly!"
 echo ""
 echo "🛠️  Useful Commands:"
 echo "   View logs:       docker compose logs"

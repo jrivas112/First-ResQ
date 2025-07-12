@@ -6,13 +6,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ANYTHINGLLM_HOST=host.docker.internal
       - OLLAMA_HOST=ollama:11434
       - QDRANT_HOST=qdrant:6333
-    env_file:
-      - ./backend/.env
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - appnet
     depends_on:

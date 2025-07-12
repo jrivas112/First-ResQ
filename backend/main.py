@@ -56,28 +56,10 @@ class ChatRequest(BaseModel):
     attachments: Optional[List[Attachment]] = []
     reset: Optional[bool] = False
 
-# Configs
-ANYTHINGLLM_API_KEY = os.getenv("ANYTHINGLLM_API_KEY", "YOUR_API_KEY")
-ANYTHINGLLM_HOST = os.getenv("ANYTHINGLLM_HOST", "host.docker.internal")
-API_URL = f"http://{ANYTHINGLLM_HOST}:3001/api/v1/workspace/qhelper/chat"
-
 @app.post("/ask")
 async def ask_question(payload: ChatRequest):
-    headers = {
-        "Authorization": f"Bearer {ANYTHINGLLM_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    response = requests.post(API_URL, json=payload.dict(), headers=headers)
-
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return {
-            "error": "Failed to get response from AnythingLLM",
-            "status_code": response.status_code,
-            "details": response.text
-        }
+    """Main endpoint - uses local RAG system"""
+    return await ask_local_rag(payload)
 
 @app.post("/ask-local")
 async def ask_local_rag(payload: ChatRequest):

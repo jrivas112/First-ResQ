@@ -2,8 +2,19 @@
 echo 🚑 First Res-Q Setup Script 🚑
 echo ==================================
 
-REM Check if Docker is installed
-docker --version >nul 2>&1
+REM Check if Docker is installedecho 🔌 Offline Features:
+echo    ✅ Pure offline operation - NO INTERNET REQUIRED
+echo    ✅ Local AI with CSV knowledge base (1000+ Q&A pairs)
+echo    ✅ Ollama LLM reasoning for complex questions
+echo    ✅ Complete first aid assistance without connectivity
+echo    ✅ Smart fallbacks and error handling
+echo.
+echo 💡 Next Steps:
+echo    1. Open http://localhost:3000 in your browser
+echo    2. Ask first aid questions - everything works offline!
+echo    3. Try: 'How do I treat a burn?' or 'Someone is choking'
+echo    4. Test offline: Disconnect internet - still works perfectly!
+echo.ersion >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo ❌ Docker is not installed. Please install Docker Desktop first.
     echo    Download from: https://www.docker.com/products/docker-desktop
@@ -22,19 +33,10 @@ if %ERRORLEVEL% NEQ 0 (
 echo ✅ Docker found
 echo ✅ Docker Compose found
 
-REM Create .env file if it doesn't exist
-if not exist "backend\.env" (
-    echo 📝 Creating environment file...
-    if not exist "backend" mkdir backend
-    (
-        echo ANYTHINGLLM_API_KEY=your_api_key_here
-        echo ANYTHINGLLM_WORKSPACE_ID=qhelper
-    ) > backend\.env
-    echo ✅ Created backend\.env file
-    echo    You can edit this file to add your AnythingLLM API key if needed
-) else (
-    echo ✅ Environment file already exists
-)
+REM Create directories if they don't exist
+if not exist "backend" mkdir backend
+
+echo 📝 Checking setup...
 
 REM Build and start services
 echo 🏗️  Building and starting services...
@@ -122,18 +124,25 @@ echo.
 echo 🎉 Setup Complete! 🎉
 echo ====================
 echo.
-echo Your First Res-Q application is now running!
+echo Your First Res-Q application is now running OFFLINE-CAPABLE!
 echo.
 echo 📱 Access Points:
-echo    Main App:         http://localhost:3000
-echo    Backend API:      http://localhost:8000
-echo    Ollama Web UI:    http://localhost:8080
-echo    Qdrant Dashboard: http://localhost:6333/dashboard
+echo    Main App:         http://localhost:3000 (✅ Works Offline)
+echo    Backend API:      http://localhost:8000 (✅ Works Offline)
+echo    Ollama Web UI:    http://localhost:8080 (✅ Works Offline)
+echo    Qdrant Dashboard: http://localhost:6333/dashboard (✅ Works Offline)
 echo.
-echo 💡 Next Steps:
+echo � Offline Features:
+echo    ✅ Local AI with CSV knowledge base (always available)
+echo    ✅ Ollama LLM reasoning (available after model download)
+echo    ✅ Complete first aid assistance without internet
+echo    ✅ Smart fallbacks for any connectivity issues
+echo.
+echo �💡 Next Steps:
 echo    1. Open http://localhost:3000 in your browser
-echo    2. Try asking: 'How do I treat a burn?'
-echo    3. Visit http://localhost:8080 to manage AI models
+echo    2. Keep "Use Local AI" checked for offline operation
+echo    3. Try asking: 'How do I treat a burn?'
+echo    4. Test offline: Disconnect internet and still get help!
 echo.
 echo 🛠️  Useful Commands:
 echo    View logs:       docker compose logs

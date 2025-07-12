@@ -15,11 +15,8 @@
   <main>
     <section>
         <div class="chat-container">
-          <div class="ai-toggle">
-            <label>
-              <input type="checkbox" id="use-local" checked> 
-              Use Local AI (CSV-based)
-            </label>
+          <div class="status-indicator">
+            <span id="status-text">🟢 Offline-First AI Assistant Ready</span>
           </div>
           <div id="chat-box"></div>
           <input type="text" id="user-input" placeholder="Ask a first aid question..." onkeydown="handleKey(event)"/>

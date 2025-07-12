@@ -136,7 +136,7 @@ docker volume prune
 **Solutions**:
 ```bash
 # Check environment variables
-docker exec backend env | grep -E "(OLLAMA|QDRANT|ANYTHINGLLM)"
+docker exec backend env | grep -E "(OLLAMA|QDRANT)"
 
 # Test internal connectivity
 docker exec backend curl http://ollama:11434/api/tags
@@ -166,8 +166,8 @@ docker-compose up --build backend
 cat backend/.env
 
 # Recreate .env file
-echo "ANYTHINGLLM_API_KEY=your_key" > backend/.env
-echo "ANYTHINGLLM_WORKSPACE_ID=qhelper" >> backend/.env
+# The application now runs purely offline - no external API keys needed!
+# All AI functionality is provided by the local Ollama + RAG system
 
 # Restart services after .env changes
 docker-compose down

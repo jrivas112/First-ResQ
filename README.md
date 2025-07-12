@@ -1,17 +1,18 @@
-# First Res-Q - AI-Powered First Aid Assistant
+# First Res-Q - Offline-First AI Emergency Assistant
 
-A comprehensive first aid chatbot application with local AI capabilities, built with FastAPI backend, HTML/CSS/JS frontend, and containerized AI services.
+A completely offline-capable first aid chatbot application with local AI capabilities, built with FastAPI backend, HTML/CSS/JS frontend, and containerized AI services. **No internet required after initial setup!**
 
 ## 🚀 Features
 
+- **🔌 Pure Offline Operation** - Works completely without internet after setup
 - **Interactive Chat Interface** - Ask first aid questions and get immediate responses
-- **Dual AI System** - Toggle between Local AI (CSV-based RAG + Ollama) and External AI (AnythingLLM)
 - **Enhanced Local AI** - Combines CSV knowledge base with Ollama LLM for intelligent responses
 - **Smart Response Methods**:
   - 🤖 **AI + Knowledge Base** - Best responses using both RAG and LLM reasoning
   - 🤖 **AI Reasoning** - Ollama-powered responses for general questions
   - 📚 **Knowledge Base Only** - Fast CSV lookup when LLM unavailable
   - 🆘 **General Advice** - Safety fallback for unmatched queries
+- **1000+ First Aid Q&A Pairs** - Comprehensive emergency knowledge base
 - **Web UI for AI Models** - Manage local models via Ollama Web UI
 - **Containerized Architecture** - Complete Docker setup for easy deployment
 - **Cross-Platform** - Runs on Windows, macOS, and Linux
@@ -39,26 +40,33 @@ git clone https://github.com/jrivas112/QHelper-AI.git
 cd QHelper-AI
 ```
 
-### 2. Environment Configuration
+### 2. Quick Start
 
-Create a `.env` file in the `backend` directory:
+**Option A: Use Setup Scripts (Recommended)**
 
-```bash
-# Navigate to backend directory
-cd backend
-
-# Create .env file (Windows)
-echo ANYTHINGLLM_API_KEY=your_api_key_here > .env
-echo ANYTHINGLLM_WORKSPACE_ID=qhelper >> .env
-
-# Create .env file (macOS/Linux)
-cat > .env << EOF
-ANYTHINGLLM_API_KEY=your_api_key_here
-ANYTHINGLLM_WORKSPACE_ID=qhelper
-EOF
+**Windows:**
+```batch
+setup.bat
 ```
 
-**Note**: Replace `your_api_key_here` with your actual AnythingLLM API key, or leave it as is if you plan to use only local AI models.
+**macOS/Linux:**
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+**Option B: Manual Setup**
+
+```bash
+# Build and start all services
+docker compose up -d --build
+
+# Wait for services to start
+sleep 20
+
+# Download AI model (optional but recommended)
+docker exec ollama ollama pull phi3:mini
+```
 
 ### 3. Build and Start Services
 
@@ -116,11 +124,8 @@ Once everything is running, you can access:
 ## 💬 Using the Application
 
 1. **Open the main app** at http://localhost:3000
-2. **Choose your AI mode**:
-   - Toggle **"Use Local AI"** ON for enhanced RAG + Ollama responses
-   - Toggle **"Use Local AI"** OFF for external AnythingLLM
-3. **Type a first aid question** like "How do I treat a burn?"
-4. **Get intelligent responses** with method indicators:
+2. **Ask first aid questions** - The system automatically uses the best available method
+3. **Get intelligent responses** with method indicators:
    - 🤖 **AI + Knowledge Base** - Enhanced responses using both CSV data and LLM reasoning
    - 🤖 **AI Reasoning** - Pure LLM responses when no specific knowledge found
    - 📚 **Knowledge Base Only** - Direct CSV matches when Ollama unavailable
@@ -134,7 +139,7 @@ Once everything is running, you can access:
 - "My child is bleeding"
 - "Someone is unconscious"
 
-**Note**: The Local AI will automatically choose the best response method based on question complexity and system availability.
+**Note**: The system works completely offline after the initial setup and model download.
 
 ## 🔧 Configuration Options
 
@@ -247,8 +252,7 @@ QHelper-AI/
 │   ├── simple_rag.py       # Fallback CSV-only RAG system
 │   ├── local_rag.py        # Alternative Qdrant-based RAG (unused)
 │   ├── firstaidqa-*.csv    # First aid Q&A dataset
-│   ├── getdatabase.py      # Database utilities
-│   └── .env                # Environment variables
+│   └── getdatabase.py      # Database utilities
 ├── frontend/               # Static web frontend
 │   ├── dockerfile         # Frontend container config
 │   ├── index.html         # Main HTML page
