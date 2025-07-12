@@ -1,163 +1,174 @@
 @echo off
-echo 🚑 First Res-Q Setup Script 🚑
-echo ==================================
+echo ==============================================
+echo First Res-Q Setup Script
+echo ==============================================
 
-REM Check if Docker is installedecho 🔌 Offline Features:
-echo    ✅ Pure offline operation - NO INTERNET REQUIRED
-echo    ✅ Local AI with CSV knowledge base (1000+ Q&A pairs)
-echo    ✅ Ollama LLM reasoning for complex questions
-echo    ✅ Complete first aid assistance without connectivity
-echo    ✅ Smart fallbacks and error handling
+REM ----------------------------------------------
+REM 1️⃣ Prerequisites Check
+REM ----------------------------------------------
 echo.
-echo 💡 Next Steps:
-echo    1. Open http://localhost:3000 in your browser
-echo    2. Ask first aid questions - everything works offline!
-echo    3. Try: 'How do I treat a burn?' or 'Someone is choking'
-echo    4. Test offline: Disconnect internet - still works perfectly!
-echo.ersion >nul 2>&1
+echo Checking for Docker installation...
+docker --version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo ❌ Docker is not installed. Please install Docker Desktop first.
-    echo    Download from: https://www.docker.com/products/docker-desktop
+    echo ERROR: Docker is not installed. Please install Docker Desktop:
+    echo     https://www.docker.com/products/docker-desktop
     pause
     exit /b 1
 )
 
-REM Check if Docker Compose is available
+echo Checking for Docker Compose...
 docker compose version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo ❌ Docker Compose is not available. Please install Docker Desktop with Compose.
+    echo ERROR: Docker Compose not found. Please ensure Docker Desktop includes Compose.
     pause
     exit /b 1
 )
 
-echo ✅ Docker found
-echo ✅ Docker Compose found
+echo Docker and Docker Compose are installed.
+echo.
 
-REM Create directories if they don't exist
+REM ----------------------------------------------
+REM 2️⃣ Ensure Required Directories Exist
+REM ----------------------------------------------
 if not exist "backend" mkdir backend
 
-echo 📝 Checking setup...
-
-REM Build and start services
-echo 🏗️  Building and starting services...
-echo    This may take several minutes on first run...
-
+REM ----------------------------------------------
+REM 3️⃣ Start Services with Docker Compose
+REM ----------------------------------------------
+echo Building and starting Docker services...
 docker compose up -d --build
 if %ERRORLEVEL% NEQ 0 (
-    echo ❌ Failed to start services. Check the error messages above.
+    echo ERROR: Failed to start services. Check error messages above.
     pause
     exit /b 1
 )
 
-echo ✅ Services started successfully!
+echo Services started successfully.
+echo.
 
-REM Check for port conflicts
-echo 🔍 Checking for port conflicts...
+REM ----------------------------------------------
+REM 4️⃣ Port Conflict Check
+REM ----------------------------------------------
+echo Checking for port conflicts...
 set "CONFLICT_FOUND="
-for %%p in (3000 8000 8080 6333 11434) do (
+for %%p in (3000 8000 8080 11434) do (
     netstat -an | findstr ":%%p " >nul 2>&1
     if not %ERRORLEVEL% EQU 1 (
-        echo ⚠️  Warning: Port %%p is already in use
+        echo WARNING: Port %%p is already in use.
         set "CONFLICT_FOUND=1"
     )
 )
 
 if defined CONFLICT_FOUND (
-    echo    You may need to stop other services or change port mappings in compose.yaml
+    echo.
+    echo WARNING: Some required ports are in use.
+    echo    You may need to stop other applications or edit docker-compose.yml.
     set /p "CONTINUE=Continue anyway? (y/N): "
     if /i not "%CONTINUE%"=="y" (
-        echo ❌ Setup cancelled
+        echo Setup cancelled.
         pause
         exit /b 1
     )
 )
+echo.
 
-REM Wait for services to be ready
-echo ⏳ Waiting for services to be ready...
+REM ----------------------------------------------
+REM 5️⃣ Wait for Services to Initialize
+REM ----------------------------------------------
+echo Waiting for services to be ready...
 timeout /t 20 /nobreak >nul
 
-REM Check if services are responding
-echo 🔍 Checking service health...
-
-REM Check backend (using curl if available, or ping as fallback)
+REM ----------------------------------------------
+REM 6️⃣ Health Check - Backend
+REM ----------------------------------------------
+echo Checking backend health...
 curl -s http://localhost:8000/health >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
-    echo ✅ Backend is ready
+    echo Backend is responding.
 ) else (
-    echo ⚠️  Backend not responding yet
+    echo WARNING: Backend not responding yet.
 )
+echo.
 
-REM Check if Ollama is responding (with retries)
+REM ----------------------------------------------
+REM 7️⃣ Health Check - Ollama
+REM ----------------------------------------------
+echo Checking Ollama readiness...
 set "OLLAMA_READY="
 for /l %%i in (1,1,6) do (
     curl -s http://localhost:11434/api/tags >nul 2>&1
     if %ERRORLEVEL% EQU 0 (
-        echo ✅ Ollama is ready
+        echo Ollama is ready.
         set "OLLAMA_READY=1"
         goto :ollama_ready
     ) else (
-        echo ⏳ Waiting for Ollama... (attempt %%i/6)
+        echo Waiting for Ollama... (attempt %%i/6)
         timeout /t 10 /nobreak >nul
     )
 )
 
 :ollama_ready
 if defined OLLAMA_READY (
-    REM Download a model
-    echo 📦 Downloading AI model (phi3:mini)...
-    echo    This may take a few minutes...
-
-    docker exec ollama ollama pull phi3:mini
-    if %ERRORLEVEL% EQU 0 (
-        echo ✅ Model downloaded successfully!
+    echo Downloading AI model...
+    echo    Trying Mistral first (better quality), fallback to Phi3...
+    docker exec ollama ollama pull mistral:latest
+    if %ERRORLEVEL% NEQ 0 (
+        echo Mistral failed, trying phi3:mini...
+        docker exec ollama ollama pull phi3:mini
+        if %ERRORLEVEL% EQU 0 (
+            echo Model downloaded successfully.
+        ) else (
+            echo WARNING: Model download failed. You can retry later:
+            echo     docker exec ollama ollama pull mistral:latest
+            echo     docker exec ollama ollama pull phi3:mini
+        )
     ) else (
-        echo ⚠️  Model download failed, but you can download it manually later
-        echo    Run: docker exec ollama ollama pull phi3:mini
+        echo Mistral model downloaded successfully.
     )
 ) else (
-    echo ⚠️  Ollama not responding after 60 seconds
-    echo    Services are running, but you may need to download models manually
-    echo    Try: docker exec ollama ollama pull phi3:mini
+    echo WARNING: Ollama not responding after retries.
+    echo    You can manually pull models later:
+    echo     docker exec ollama ollama pull mistral:latest
+    echo     docker exec ollama ollama pull phi3:mini
 )
+echo.
 
+REM ----------------------------------------------
+REM 8️⃣ Final Instructions
+REM ----------------------------------------------
+echo Setup Complete! Your First Res-Q app is now offline-capable.
+echo ==============================================
 echo.
-echo 🎉 Setup Complete! 🎉
-echo ====================
+echo Access Points:
+echo    App:              http://localhost:3000
+echo    Backend API:      http://localhost:8000
+echo    Ollama UI:        http://localhost:8080
 echo.
-echo Your First Res-Q application is now running OFFLINE-CAPABLE!
+echo Offline Features:
+echo    - Fully offline operation
+echo    - Local AI with CSV knowledge base
+echo    - Ollama LLM reasoning
+echo    - Complete first aid help without internet
 echo.
-echo 📱 Access Points:
-echo    Main App:         http://localhost:3000 (✅ Works Offline)
-echo    Backend API:      http://localhost:8000 (✅ Works Offline)
-echo    Ollama Web UI:    http://localhost:8080 (✅ Works Offline)
-echo    Qdrant Dashboard: http://localhost:6333/dashboard (✅ Works Offline)
-echo.
-echo � Offline Features:
-echo    ✅ Local AI with CSV knowledge base (always available)
-echo    ✅ Ollama LLM reasoning (available after model download)
-echo    ✅ Complete first aid assistance without internet
-echo    ✅ Smart fallbacks for any connectivity issues
-echo.
-echo �💡 Next Steps:
+echo Next Steps:
 echo    1. Open http://localhost:3000 in your browser
-echo    2. Keep "Use Local AI" checked for offline operation
-echo    3. Try asking: 'How do I treat a burn?'
-echo    4. Test offline: Disconnect internet and still get help!
+echo    2. Keep "Use Local AI" checked for offline mode
+echo    3. Try questions like: "How do I treat a burn?"
+echo    4. Disconnect internet to test offline support
 echo.
-echo 🛠️  Useful Commands:
+echo Useful Commands:
 echo    View logs:       docker compose logs
 echo    Stop services:   docker compose down
 echo    Restart:         docker compose restart
-echo    Download models: docker exec ollama ollama pull model_name
-echo    Clean reset:     docker compose down -v ^&^& docker compose up -d --build
+echo    Download model:  docker exec ollama ollama pull model_name
+echo    Clean reset:     docker compose down -v && docker compose up -d --build
 echo.
-echo 🔧 Troubleshooting:
-echo    If services fail to start:
-echo    1. Check Docker Desktop is running
-echo    2. Ensure ports aren't in use by other apps
-echo    3. Try: docker compose down ^&^& docker compose up -d --build
-echo    4. Check logs: docker compose logs [service_name]
+echo Troubleshooting:
+echo    - Ensure Docker Desktop is running
+echo    - Check for conflicting ports
+echo    - Use: docker compose down && docker compose up -d --build
+echo    - View logs for errors: docker compose logs [service]
 echo.
-echo 📚 For more information, see README.md
+echo See README.md for more details.
 echo.
 pause
