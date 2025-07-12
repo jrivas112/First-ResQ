@@ -15,6 +15,12 @@
   <main>
     <section>
         <div class="chat-container">
+          <div class="ai-toggle">
+            <label>
+              <input type="checkbox" id="use-local" checked> 
+              Use Local AI (CSV-based)
+            </label>
+          </div>
           <div id="chat-box"></div>
           <input type="text" id="user-input" placeholder="Ask a first aid question..." onkeydown="handleKey(event)"/>
           <button onclick="sendMessage()">⌯⌲</button> <!--ᯓ➤-->

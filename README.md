@@ -5,11 +5,17 @@ A comprehensive first aid chatbot application with local AI capabilities, built 
 ## 🚀 Features
 
 - **Interactive Chat Interface** - Ask first aid questions and get immediate responses
-- **Local AI Models** - Run LLM models locally using Ollama (no external API dependencies)
-- **Vector Database** - RAG (Retrieval-Augmented Generation) capabilities with Qdrant
-- **Web UI** - User-friendly interface for model management
-- **Containerized** - Complete Docker setup for easy deployment
+- **Dual AI System** - Toggle between Local AI (CSV-based RAG + Ollama) and External AI (AnythingLLM)
+- **Enhanced Local AI** - Combines CSV knowledge base with Ollama LLM for intelligent responses
+- **Smart Response Methods**:
+  - 🤖 **AI + Knowledge Base** - Best responses using both RAG and LLM reasoning
+  - 🤖 **AI Reasoning** - Ollama-powered responses for general questions
+  - 📚 **Knowledge Base Only** - Fast CSV lookup when LLM unavailable
+  - 🆘 **General Advice** - Safety fallback for unmatched queries
+- **Web UI for AI Models** - Manage local models via Ollama Web UI
+- **Containerized Architecture** - Complete Docker setup for easy deployment
 - **Cross-Platform** - Runs on Windows, macOS, and Linux
+- **Health Monitoring** - Built-in health checks and system status
 
 ## 📋 Prerequisites
 
@@ -29,7 +35,7 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/jrivas112/QHelper-AI.git
 cd QHelper-AI
 ```
 
@@ -60,10 +66,10 @@ From the root directory:
 
 ```bash
 # Build and start all services
-docker-compose up --build
+docker compose up --build
 
 # Or run in background (detached mode)
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 **First startup will take several minutes** as Docker downloads all the necessary images.
@@ -89,7 +95,7 @@ Check that all services are running:
 
 ```bash
 # Check container status
-docker-compose ps
+docker compose ps
 
 # You should see all containers as "Up"
 ```
@@ -103,20 +109,32 @@ Once everything is running, you can access:
 | **First Res-Q App** | http://localhost:3000 | Main chat application |
 | **Backend API** | http://localhost:8000 | FastAPI backend |
 | **API Documentation** | http://localhost:8000/docs | Interactive API docs |
+| **Health Check** | http://localhost:8000/health | System status |
 | **Ollama Web UI** | http://localhost:8080 | Model management interface |
 | **Qdrant Dashboard** | http://localhost:6333/dashboard | Vector database admin |
 
 ## 💬 Using the Application
 
 1. **Open the main app** at http://localhost:3000
-2. **Type a first aid question** like "How do I treat a burn?"
-3. **Get AI-powered responses** based on medical knowledge
+2. **Choose your AI mode**:
+   - Toggle **"Use Local AI"** ON for enhanced RAG + Ollama responses
+   - Toggle **"Use Local AI"** OFF for external AnythingLLM
+3. **Type a first aid question** like "How do I treat a burn?"
+4. **Get intelligent responses** with method indicators:
+   - 🤖 **AI + Knowledge Base** - Enhanced responses using both CSV data and LLM reasoning
+   - 🤖 **AI Reasoning** - Pure LLM responses when no specific knowledge found
+   - 📚 **Knowledge Base Only** - Direct CSV matches when Ollama unavailable
+   - 🆘 **General Advice** - Safe fallback responses
 
 ### Example Questions to Try:
 - "What should I do for a minor cut?"
 - "How do I help someone who is choking?"
 - "What are the signs of a heart attack?"
 - "How do I treat a sprain?"
+- "My child is bleeding"
+- "Someone is unconscious"
+
+**Note**: The Local AI will automatically choose the best response method based on question complexity and system availability.
 
 ## 🔧 Configuration Options
 
@@ -154,10 +172,10 @@ Edit files in `frontend/` to:
 
 ```bash
 # Stop all services
-docker-compose down
+docker compose down
 
 # Stop and remove all data (WARNING: This deletes downloaded models)
-docker-compose down --volumes
+docker compose down --volumes
 ```
 
 ## 🐛 Troubleshooting
@@ -184,7 +202,7 @@ docker volume prune
 **3. Models not appearing in Web UI**
 ```bash
 # Restart ollama container
-docker-compose restart ollama
+docker compose restart ollama
 
 # Re-download model
 docker exec ollama ollama pull phi3:mini
@@ -225,7 +243,10 @@ QHelper-AI/
 │   ├── dockerfile           # Backend container config
 │   ├── requirements.txt     # Python dependencies
 │   ├── main.py             # FastAPI application
-│   ├── local_rag.py        # RAG implementation
+│   ├── enhanced_rag.py     # Enhanced RAG + Ollama system
+│   ├── simple_rag.py       # Fallback CSV-only RAG system
+│   ├── local_rag.py        # Alternative Qdrant-based RAG (unused)
+│   ├── firstaidqa-*.csv    # First aid Q&A dataset
 │   ├── getdatabase.py      # Database utilities
 │   └── .env                # Environment variables
 ├── frontend/               # Static web frontend
@@ -242,18 +263,18 @@ QHelper-AI/
 
 1. **Backend changes**: Edit files in `backend/`, then restart:
    ```bash
-   docker-compose restart backend
+   docker compose restart backend
    ```
 
 2. **Frontend changes**: Edit files in `frontend/`, then rebuild:
    ```bash
-   docker-compose up --build frontend
+   docker compose up --build frontend
    ```
 
 3. **Configuration changes**: Edit `compose.yaml`, then:
    ```bash
-   docker-compose down
-   docker-compose up --build
+   docker compose down
+   docker compose up --build
    ```
 
 ### Adding New Models
@@ -290,7 +311,7 @@ curl http://localhost:11434/api/generate -d '{
 If you encounter issues:
 
 1. Check the [Troubleshooting](#troubleshooting) section
-2. Review Docker logs: `docker-compose logs service_name`
+2. Review Docker logs: `docker compose logs service_name`
 3. Create an issue with detailed error information
 4. Include your system specifications and Docker version
 
