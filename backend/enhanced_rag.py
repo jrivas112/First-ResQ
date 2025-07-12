@@ -309,8 +309,8 @@ Use the knowledge base information and expand on it with helpful details."""
             best_model = self.get_best_model()
             print(f"Selected model: {best_model}")
             
-            # Test a simple query with the best model using chat endpoint
-            test_result = self.query_ollama("Test connection", best_model)
+            # Test a simple query with the best model
+            test_result = self.query_ollama("Hello", best_model)
             if test_result is not None:
                 print(f"✅ Model {best_model} is working")
                 return True
