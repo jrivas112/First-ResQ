@@ -14,25 +14,14 @@
 
   <main>
     <section>
-      <h2>First Aid Tips</h2>
-      <ul>
-        <li>Burns: Cool with water for 10 minutes.</li>
-        <li>Bleeding: Apply pressure and elevate.</li>
-        <li>Choking: Perform abdominal thrusts.</li>
-      </ul>
+        <div class="chat-container">
+          <div id="chat-box"></div>
+          <input type="text" id="user-input" placeholder="Ask a first aid question..." onkeydown="handleKey(event)"/>
+          <button onclick="sendMessage()">⌯⌲</button> <!--ᯓ➤-->
+        </div>
+        <script src="chatbot.js"></script>
     </section>
   </main>
 
-  
-  <div class="chat-container">
-    <div id="chat-box"></div>
-    <input type="text" id="user-input" placeholder="Ask a first aid question..." />
-    <button onclick="sendMessage()">Send</button>
-  </div>
-  <script src="chatbot.js"></script>
-
-  <footer>
-    <p>Made with ❤️ for the HaQathon</p>
-  </footer>
 </body>
 </html>

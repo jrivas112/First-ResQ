@@ -6,11 +6,11 @@ function sendMessage() {
   if (!userMessage) return;
 
   // Display user message
-  chatBox.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
+  chatBox.innerHTML += `<div class="bubble user"><strong>You:</strong> ${userMessage}</div>`;
 
   // Simulate bot response
   const botReply = getBotReply(userMessage);
-  chatBox.innerHTML += `<p><strong>QHelper:</strong> ${botReply}</p>`;
+  chatBox.innerHTML += `<div class="bubble bot"><strong>QHelper:</strong> ${botReply}</div>`;
 
   input.value = "";
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -25,4 +25,10 @@ function getBotReply(message) {
   } else {
     return "I'm still learning! Try asking about burns or bleeding.";
   }
+}
+
+function handleKey(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
 }
