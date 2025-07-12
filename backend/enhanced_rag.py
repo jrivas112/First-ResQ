@@ -23,7 +23,7 @@ class EnhancedFirstAidRAG:
         self.question_vectors = None
         self.vectors_file = "question_vectors.pkl"
         self.available_models = []
-        self.preferred_models = ["mistral:latest", "mistral", "phi3:mini", "llama2:7b", "llama2"]  # Order by preference
+        self.preferred_models = ["phi3:mini", "mistral:latest", "mistral", "llama2:7b", "llama2"]  # Order by preference
         
     def preprocess_text(self, text: str) -> str:
         """Simple text preprocessing"""
@@ -115,8 +115,11 @@ class EnhancedFirstAidRAG:
                 }
                 # Remove all limits and stop sequences to test
             elif "phi3" in model.lower():
-                options["temperature"] = 0.7
-                options["stop"] = ["\n\n", "Question:", "Q:"]
+                options = {
+                    "temperature": 0.7,
+                    "top_p": 0.9
+                }
+                # Remove stop sequences for phi3 to prevent truncation
             else:
                 options["stop"] = ["\n\n"]
             
