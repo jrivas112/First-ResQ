@@ -23,7 +23,7 @@ class EnhancedFirstAidRAG:
         self.question_vectors = None
         self.vectors_file = "question_vectors.pkl"
         self.available_models = []
-        self.preferred_models = ["phi3:mini", "mistral:latest", "mistral", "llama2:7b", "llama2"]  # Order by preference
+        self.preferred_models = ["qwen2:1.5b", "phi3:mini", "gemma:2b", "mistral:latest", "mistral", "llama2:7b", "llama2"]  # Order by speed and preference
         
     def preprocess_text(self, text: str) -> str:
         """Simple text preprocessing"""
@@ -107,17 +107,30 @@ class EnhancedFirstAidRAG:
                 "top_p": 0.9
             }
             
-            # Model-specific optimizations - minimal options to avoid truncation
+            # Model-specific optimizations for speed and quality
             if "mistral" in model.lower():
                 options = {
                     "temperature": 0.7,
-                    "top_p": 0.9
+                    "top_p": 0.9,
+                    "top_k": 20,        # Reduce choices for faster decisions
+                    "num_predict": 300  # Limit response length for speed
                 }
-                # Remove all limits and stop sequences to test
+            elif "qwen2" in model.lower():
+                options = {
+                    "temperature": 0.5,     # Lower for faster, very focused responses
+                    "top_p": 0.85,         # Slightly more focused
+                    "top_k": 10,           # Very fast token selection
+                    "num_predict": 200,    # Short responses for maximum speed
+                    "repeat_penalty": 1.15  # Prevent repetition in small model
+                }
+                # Ultra-fast mode for qwen2
             elif "phi3" in model.lower():
                 options = {
-                    "temperature": 0.7,
-                    "top_p": 0.9
+                    "temperature": 0.6,     # Slightly lower for faster, more focused responses
+                    "top_p": 0.9,
+                    "top_k": 15,           # Faster token selection
+                    "num_predict": 250,    # Shorter responses = faster generation
+                    "repeat_penalty": 1.1   # Prevent repetition loops
                 }
                 # Remove stop sequences for phi3 to prevent truncation
             else:
@@ -132,7 +145,7 @@ class EnhancedFirstAidRAG:
                     "stream": True,  # Use streaming but handle it properly
                     "options": options
                 },
-                timeout=60,
+                timeout=30,  # Reduced timeout for faster fallbacks
                 stream=True  # Enable streaming in requests 
             )
             

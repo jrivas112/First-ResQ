@@ -44,13 +44,46 @@ if errorlevel 1 (
 )
 
 echo.
-echo [4/4] Starting updated containers...
+echo [4/5] Starting updated containers...
 docker compose up -d
 if errorlevel 1 (
     echo ERROR: Failed to start containers
     echo Check the error messages above
     pause
     exit /b 1
+)
+
+echo.
+echo [5/5] Checking for missing AI models...
+echo Waiting for Ollama to be ready...
+timeout /t 10 /nobreak >nul
+
+REM Check if qwen2:1.5b is available
+docker exec ollama ollama list | findstr "qwen2:1.5b" >nul
+if errorlevel 1 (
+    echo Installing ultra-fast qwen2:1.5b model...
+    docker exec ollama ollama pull qwen2:1.5b
+    if errorlevel 0 (
+        echo ✅ qwen2:1.5b downloaded successfully
+    ) else (
+        echo ⚠️  qwen2:1.5b download failed
+    )
+) else (
+    echo ✅ qwen2:1.5b already available
+)
+
+REM Check if phi3:mini is available
+docker exec ollama ollama list | findstr "phi3:mini" >nul
+if errorlevel 1 (
+    echo Installing phi3:mini backup model...
+    docker exec ollama ollama pull phi3:mini
+    if errorlevel 0 (
+        echo ✅ phi3:mini downloaded successfully
+    ) else (
+        echo ⚠️  phi3:mini download failed
+    )
+) else (
+    echo ✅ phi3:mini already available
 )
 
 echo.

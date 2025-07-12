@@ -84,18 +84,26 @@ docker compose up -d --build
 
 ### 4. Download AI Models
 
-Once the containers are running, download an AI model:
+Once the containers are running, download AI models for best performance:
 
 ```bash
-# Download a small, fast model (recommended for testing)
+# Download ultra-fast model (recommended first choice)
+docker exec ollama ollama pull qwen2:1.5b
+
+# Download fast backup model
 docker exec ollama ollama pull phi3:mini
 
-# Or download a larger, more capable model
-docker exec ollama ollama pull llama2:7b
+# Download quality backup model (optional)
+docker exec ollama ollama pull mistral:latest
 
-# Verify the model was downloaded
+# Verify the models were downloaded
 docker exec ollama ollama list
 ```
+
+**Model Performance:**
+- `qwen2:1.5b` (934MB) - Ultra-fast responses, lowest memory usage
+- `phi3:mini` (2.2GB) - Fast responses, good quality
+- `mistral:latest` (4.1GB) - Best quality, slower responses
 
 ### 5. Verify Installation
 
@@ -145,17 +153,31 @@ Once everything is running, you can access:
 ### Using Different AI Models
 
 ```bash
-# List available models online
+# List available models
 docker exec ollama ollama list
 
-# Pull different models
-docker exec ollama ollama pull codellama:7b
-docker exec ollama ollama pull mistral:7b
-docker exec ollama ollama pull llama2:13b
+# Pull ultra-fast models (recommended)
+docker exec ollama ollama pull qwen2:1.5b     # 934MB - Ultra-fast
+docker exec ollama ollama pull gemma:2b       # 1.4GB - Very fast
+
+# Pull balanced models
+docker exec ollama ollama pull phi3:mini      # 2.2GB - Fast & quality
+docker exec ollama ollama pull mistral:latest # 4.1GB - Best quality
+
+# Pull larger models (if you have sufficient RAM)
+docker exec ollama ollama pull llama2:7b      # 3.8GB - Good quality
+docker exec ollama ollama pull llama2:13b     # 7GB - Excellent quality
 
 # Remove models to save space
 docker exec ollama ollama rm model_name
 ```
+
+**Current Model Priority:**
+1. `qwen2:1.5b` - Ultra-fast (934MB)
+2. `phi3:mini` - Fast backup (2.2GB) 
+3. `mistral:latest` - Quality backup (4.1GB)
+
+The system automatically uses the fastest available model.
 
 ### Backend Configuration
 
@@ -283,6 +305,60 @@ If you encounter GPU-related errors on Windows:
 **For better quality:**
 - Use larger models (`llama2:13b`, `llama2:70b`)
 - Ensure adequate RAM (16GB+ recommended)
+
+### ⚡ Speed Optimization Options
+
+To get faster response times from your AI models:
+
+#### **1. Use Fastest Models (Recommended)**
+```bash
+# Super fast models (under 2GB)
+docker exec ollama ollama pull phi3:mini      # 2.2GB - Currently active, very fast
+docker exec ollama ollama pull gemma:2b       # 1.4GB - Even faster option
+docker exec ollama ollama pull qwen2:1.5b     # 900MB - Fastest option
+
+# Test different models
+docker exec ollama ollama run phi3:mini "How do I treat a cut?"
+```
+
+#### **2. Model Performance Comparison**
+| Model | Size | Speed | Quality | Best For |
+|-------|------|-------|---------|----------|
+| `qwen2:1.5b` | 900MB | ⚡⚡⚡ | Good | Ultra-fast responses |
+| `gemma:2b` | 1.4GB | ⚡⚡ | Very Good | Balanced speed/quality |
+| `phi3:mini` | 2.2GB | ⚡⚡ | Excellent | Current default |
+| `mistral:latest` | 4.1GB | ⚡ | Excellent | Comprehensive responses |
+
+#### **3. Speed vs Quality Trade-offs**
+- **Fastest**: Use `qwen2:1.5b` for immediate responses
+- **Balanced**: Use `phi3:mini` (current) for good speed + quality  
+- **Quality**: Use `mistral:latest` for detailed medical explanations
+
+#### **4. Hardware Optimizations**
+- **RAM**: Allocate more memory to Docker (8GB+ recommended)
+- **Storage**: Use SSD for Docker volumes if available
+- **CPU**: Close other applications to free up processing power
+
+#### **5. Quick Model Switching**
+To prioritize a different model, edit `backend/enhanced_rag.py` line 26:
+```python
+# For maximum speed:
+self.preferred_models = ["qwen2:1.5b", "gemma:2b", "phi3:mini", ...]
+
+# For balanced performance (current):
+self.preferred_models = ["phi3:mini", "gemma:2b", "mistral:latest", ...]
+
+# For maximum quality:
+self.preferred_models = ["mistral:latest", "phi3:mini", "gemma:2b", ...]
+```
+
+Then rebuild: `docker compose build backend && docker compose up backend -d`
+
+#### **6. Response Length Control**
+The system now uses optimized parameters:
+- **Shorter responses**: Faster generation (current: ~250 tokens max)
+- **Focused answers**: Reduced token sampling for quicker decisions
+- **Smart timeouts**: 30-second limit prevents hanging
 
 ## 📁 Project Structure
 

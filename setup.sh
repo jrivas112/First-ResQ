@@ -101,25 +101,41 @@ for i in {1..6}; do
 done
 
 if [ "$OLLAMA_READY" = true ]; then
-    # Download a model (try mistral first, fallback to phi3:mini)
-    echo "📦 Downloading AI model..."
+    # Download AI models for maximum speed
+    echo "📦 Downloading AI models for maximum speed..."
     echo "   This may take a few minutes..."
     
-    # Try to download mistral first (better quality)
-    if docker exec ollama ollama pull mistral:latest; then
-        echo "✅ Mistral model downloaded successfully!"
-    elif docker exec ollama ollama pull phi3:mini; then
-        echo "✅ Phi3:mini model downloaded successfully!"
+    # Download qwen2:1.5b first (ultra-fast)
+    echo "   1. Downloading qwen2:1.5b (ultra-fast, 934MB)..."
+    if docker exec ollama ollama pull qwen2:1.5b; then
+        echo "✅ qwen2:1.5b downloaded successfully!"
     else
-        echo "⚠️  Model download failed, but you can download manually later"
-        echo "   Try: docker exec ollama ollama pull mistral:latest"
-        echo "   Or:  docker exec ollama ollama pull phi3:mini"
+        echo "⚠️  qwen2:1.5b failed, continuing..."
     fi
+    
+    # Download phi3:mini (fast backup)
+    echo "   2. Downloading phi3:mini (fast backup, 2.2GB)..."
+    if docker exec ollama ollama pull phi3:mini; then
+        echo "✅ phi3:mini downloaded successfully!"
+    else
+        echo "⚠️  phi3:mini failed, continuing..."
+    fi
+    
+    # Download mistral (quality backup)
+    echo "   3. Downloading mistral:latest (quality backup, 4.1GB)..."
+    if docker exec ollama ollama pull mistral:latest; then
+        echo "✅ mistral:latest downloaded successfully!"
+    else
+        echo "⚠️  mistral:latest failed, continuing..."
+    fi
+    
+    echo "✅ Model downloads complete. System prioritizes fastest model automatically."
 else
     echo "⚠️  Ollama not responding after 60 seconds"
     echo "   Services are running, but you may need to download models manually"
-    echo "   Try: docker exec ollama ollama pull mistral:latest"
+    echo "   Try: docker exec ollama ollama pull qwen2:1.5b"
     echo "   Or:  docker exec ollama ollama pull phi3:mini"
+    echo "   Or:  docker exec ollama ollama pull mistral:latest"
 fi
 
 echo ""
