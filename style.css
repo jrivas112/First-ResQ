@@ -29,13 +29,13 @@ h1, h2 {
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-#chat-box {
+/*#chat-box {
   height: 300px;
   overflow-y: auto;
   border: 1px solid #ccc;
   padding: 10px;
   margin-bottom: 10px;
-}
+}*/
 
 #user-input {
   width: 90%;
@@ -46,4 +46,33 @@ h1, h2 {
 button {
   padding: 8px 12px;
   color: #333;
+}
+
+.bubble {
+  max-width: 70%;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.user {
+  background-color: #d1e7dd;
+  align-self: flex-end;
+  text-align: right;
+  margin-left: auto;
+}
+
+.bot {
+  background-color: #f8d7da;
+  align-self: flex-start;
+  text-align: left;
+  margin-right: auto;
+}
+
+#chat-box {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
 }
