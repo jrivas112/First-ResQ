@@ -1,3 +1,10 @@
+// Warn if profileManager isn’t available
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.profileManager) {
+    console.warn('profileManager not found; defaulting to Guest profile');
+  }
+});
+
 async function sendMessage() {
   const input = document.getElementById("user-input");
   const chatBox = document.getElementById("chat-box");
@@ -6,12 +13,20 @@ async function sendMessage() {
   const userMessage = input.value;
   if (!userMessage) return;
 
-  // Display user message
-  chatBox.innerHTML += `<div class="bubble user"><strong>You:</strong> ${userMessage}</div>`;
+  const profile = window.profileManager
+    ? window.profileManager.getCurrentProfile()
+    : { id: 'guest', name: 'Guest', age: '', blood_group: '', pre_cond: '' };
+
+  // Display user message;
+  chatBox.innerHTML += `<div class='bubble user'><strong>${profile.name}:</strong> ${userMessage}</div>`;
+
 
   // Choose endpoint based on toggle
   const endpoint = ragOnlyMode ? "http://localhost:8000/ask-rag-only" : "http://localhost:8000/ask";
   const aiMode = ragOnlyMode ? "RAG Only" : "Enhanced AI";
+
+  const { age, blood_group, pre_cond } = profile;
+  const payload = { message: userMessage, mode: 'chat', sessionId: 'frontend-session', attachments: [], reset: false, profile: { age, blood_group, pre_cond } };
 
   // Send to backend
   try {

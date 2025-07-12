@@ -26,11 +26,32 @@
               </label>
               <small class="toggle-hint">Toggle ON for fastest responses using only the knowledge base</small>
             </div>
+          <div class="profile-selector">
+            <label for="profile-select">Profile:</label>
+            <select id="profile-select"></select>
           </div>
+          </div>
+          
           <div id="chat-box"></div>
           <input type="text" id="user-input" placeholder="Ask a first aid question..." onkeydown="handleKey(event)"/>
           <button onclick="sendMessage()">⌯⌲</button> <!--ᯓ➤-->
         </div>
+        <div id="profile-modal" class="modal hidden">
+          <div class="modal-content">
+            <h2>New Profile</h2>
+            <form id="profile-form">
+              <input name="name" type="text" placeholder="Name" required>
+              <input name="age" type="text" placeholder="Age" required>
+              <input name="blood_group" type="text" placeholder="Blood Group" required>
+              <input name="pre_cond" type="text" placeholder="Preexisting Conditions/Allergies" required>
+              <div class="actions">
+                <button type="button" id="cancel-btn">Cancel</button>
+                <button type="submit">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <script src="profileManager.js"></script>
         <script src="chatbot.js"></script>
     </section>
   </main>
