@@ -24,7 +24,8 @@ class EnhancedFirstAidRAG:
         self.vectors_file = "question_vectors.pkl"
         self.available_models = []
         self.preferred_models = ["qwen2:1.5b", "phi3:mini", "gemma:2b", "mistral:latest", "mistral", "llama2:7b", "llama2"]  # Order by speed and preference
-        self.conversation_history = []  # Initialize conversation history
+        self.conversation_histories = {}  # Dictionary to store per-profile conversation histories
+        self.current_profile_id = "guest"  # Default profile ID
         
     def preprocess_text(self, text: str) -> str:
         """Simple text preprocessing"""
@@ -195,15 +196,18 @@ class EnhancedFirstAidRAG:
             print(f"Failed to connect to Ollama: {e}")
             return None
     
-    def get_answer(self, query: str, similarity_threshold: float = 0.1) -> Dict:
+    def get_answer(self, query: str, profile_info: Dict = None, profile_id: str = "guest", similarity_threshold: float = 0.1) -> Dict:
         """Get enhanced answer using RAG + Ollama with smart conversation context"""
-        # Store original query for history
+        # Set the current profile for this request
+        self.set_current_profile(profile_id)
+        
+        # Store original query for history (without profile info)
         original_query = query
         
         # Check if this is just a greeting first
         if self.is_greeting(query):
             greeting_response = self.get_greeting_response(query)
-            self.update_conversation_history(original_query, greeting_response['answer'])
+            # Don't store greetings in conversation history
             return greeting_response
         
         # Add conversation context if this seems like a follow-up question
@@ -211,8 +215,8 @@ class EnhancedFirstAidRAG:
         
         similar_questions = self.search_similar_questions(contextual_query, top_k=3)
         
-        # Try Ollama-enhanced response first
-        ollama_response = self.get_ollama_enhanced_answer(contextual_query, similar_questions)
+        # Try Ollama-enhanced response first (with profile context)
+        ollama_response = self.get_ollama_enhanced_answer(contextual_query, similar_questions, profile_info)
         if ollama_response:
             # Update conversation history with the original query and response
             self.update_conversation_history(original_query, ollama_response['answer'])
@@ -229,21 +233,38 @@ class EnhancedFirstAidRAG:
             }
         
         best_match = similar_questions[0]
-        return {
+        result = {
             "answer": best_match['answer'],
             "confidence": best_match['similarity'],
             "source": f"Question {best_match['index']}: {best_match['question'][:100]}...",
             "similar_questions": [q['question'][:80] + "..." if len(q['question']) > 80 else q['question'] for q in similar_questions[:3]],
             "method": "rag_only"
         }
+        
+        # Update conversation history for RAG-only responses too
+        self.update_conversation_history(original_query, result['answer'])
+        return result
     
-    def get_ollama_enhanced_answer(self, query: str, similar_questions: List[Dict]) -> Dict:
-        """Get answer using Ollama with RAG context"""
+    def get_ollama_enhanced_answer(self, query: str, similar_questions: List[Dict], profile_info: Dict = None) -> Dict:
+        """Get answer using Ollama with RAG context and profile information"""
+        # Create profile context string if profile info is provided
+        profile_context = ""
+        if profile_info:
+            profile_context = f"""Patient Information:
+- Age: {profile_info.get('age', 'N/A')}
+- Gender: {profile_info.get('gender', 'N/A')}
+- Blood Group: {profile_info.get('blood_group', 'N/A')}
+- Pre-existing Conditions: {profile_info.get('pre_existing_conditions', 'None')}
+
+Please consider these details when providing your response.
+
+"""
+        
         if not similar_questions or similar_questions[0]['similarity'] < 0.05:
             # No good matches, use Ollama alone
             prompt = f"""You are a helpful first aid assistant. Please provide a clear, practical response to this first aid question:
 
-{query}
+{profile_context}{query}
 
 Format your response using valid HTML with:
 - Use <h3> for section headings
@@ -271,7 +292,7 @@ Provide specific steps and safety information. If this is a serious emergency, a
 
 {context}
 
-Now answer this question with clear, practical steps:
+{profile_context}Now answer this question with clear, practical steps:
 
 {query}
 
@@ -351,18 +372,33 @@ Use the knowledge base information and expand on it with helpful details."""
             return False
     
     def clear_conversation_history(self):
-        """Clear conversation history for a fresh start"""
-        self.conversation_history = []
-        print("Conversation history cleared")
+        """Clear conversation history for current profile only"""
+        self.clear_current_profile_history()
     
-    def get_conversation_summary(self) -> Dict:
-        """Get a summary of the current conversation"""
-        return {
-            "total_exchanges": len(self.conversation_history),
-            "recent_topics": [q['question'][:50] + "..." if len(q['question']) > 50 else q['question'] 
-                            for q in self.conversation_history[-3:]] if self.conversation_history else [],
-            "context_enabled": True
-        }
+    def get_conversation_summary(self, profile_id: str = "guest") -> Dict:
+        """Get a summary of the current conversation - medical queries only for specified profile"""
+        # Set the profile for this operation
+        original_profile = self.current_profile_id
+        self.set_current_profile(profile_id)
+        
+        try:
+            # Clean any unwanted entries before generating summary
+            self.clean_conversation_history()
+            
+            current_history = self.get_current_conversation_history()
+            
+            return {
+                "total_exchanges": len(current_history),
+                "recent_topics": [q['question'][:50] + "..." if len(q['question']) > 50 else q['question'] 
+                                for q in current_history[-3:]] if current_history else [],
+                "context_enabled": True,
+                "profile_id": profile_id,
+                "note": f"Only medical queries for profile '{profile_id}' are stored"
+            }
+        finally:
+            # Restore original profile
+            if original_profile:
+                self.set_current_profile(original_profile)
     
     def is_greeting(self, query: str) -> bool:
         """Detect if the query is just a greeting or casual conversation"""
@@ -420,11 +456,13 @@ Use the knowledge base information and expand on it with helpful details."""
     
     def add_conversation_context(self, query: str) -> str:
         """Add conversation context only if it seems like a follow-up question"""
-        if not self.conversation_history or not self.detect_follow_up_question(query):
+        current_history = self.get_current_conversation_history()
+        
+        if not current_history or not self.detect_follow_up_question(query):
             return query  # No context needed for fresh questions
         
-        # Add context from the most recent Q&A
-        recent = self.conversation_history[-1]
+        # Add context from the most recent Q&A for current profile
+        recent = current_history[-1]
         context = f"""Previous conversation context:
 Q: {recent['question']}
 A: {recent['answer'][:150]}{'...' if len(recent['answer']) > 150 else ''}
@@ -434,16 +472,100 @@ Current question: {query}"""
         return context
     
     def update_conversation_history(self, question: str, answer: str):
-        """Update conversation history with the latest Q&A pair"""
-        self.conversation_history.append({
+        """Update conversation history with the latest Q&A pair - only for medical queries"""
+        # Don't store greetings, thanks, or very short non-medical queries
+        if self.is_greeting(question) or self.is_non_medical_query(question):
+            return
+            
+        # Get the current profile's conversation history
+        profile_history = self.get_current_conversation_history()
+        
+        profile_history.append({
             'question': question,
             'answer': answer,
             'timestamp': pd.Timestamp.now()
         })
         
         # Keep only the most recent entries (limit to 5)
-        if len(self.conversation_history) > 5:
-            self.conversation_history = self.conversation_history[-5:]
+        if len(profile_history) > 5:
+            profile_history = profile_history[-5:]
+        
+        # Update the profile's conversation history
+        self.conversation_histories[self.current_profile_id] = profile_history
+
+    def is_non_medical_query(self, query: str) -> bool:
+        """Detect if the query is non-medical and shouldn't be stored in history"""
+        non_medical_patterns = [
+            "test", "testing", "can you hear me", "are you working",
+            "what can you do", "help", "what are your capabilities",
+            "who are you", "what is your name", "how do you work",
+            "git", "github", "code", "programming", "software", "bug",
+            "error", "debug", "commit", "push", "pull", "branch",
+            "information:", "age:", "gender:", "blood", "profile",
+            "personal information", "user information", "medical history"
+        ]
+        
+        query_lower = query.lower().strip()
+        
+        # Check for very short queries (likely not medical)
+        if len(query_lower) <= 3:
+            return True
+        
+        # Check for profile/information patterns
+        if "age:" in query_lower or "gender:" in query_lower or "blood" in query_lower:
+            return True
+            
+        # Check if it looks like structured data (contains multiple colons or dashes)
+        if query_lower.count(':') >= 2 or query_lower.count(' - ') >= 2:
+            return True
+            
+        # Check for non-medical patterns
+        for pattern in non_medical_patterns:
+            if pattern in query_lower:
+                return True
+                
+        return False
+    
+    def clean_conversation_history(self):
+        """Remove any non-medical entries that might have slipped through for current profile"""
+        current_history = self.get_current_conversation_history()
+        original_count = len(current_history)
+        
+        cleaned_history = [
+            entry for entry in current_history 
+            if not (self.is_greeting(entry['question']) or self.is_non_medical_query(entry['question']))
+        ]
+        
+        cleaned_count = original_count - len(cleaned_history)
+        if cleaned_count > 0:
+            print(f"Cleaned {cleaned_count} non-medical entries from conversation history for profile: {self.current_profile_id}")
+            self.conversation_histories[self.current_profile_id] = cleaned_history
+    
+    def set_current_profile(self, profile_id: str):
+        """Set the current profile for conversation context"""
+        self.current_profile_id = profile_id
+        # Initialize profile history if it doesn't exist
+        if profile_id not in self.conversation_histories:
+            self.conversation_histories[profile_id] = []
+    
+    def get_current_conversation_history(self) -> List[Dict]:
+        """Get conversation history for the current profile"""
+        if self.current_profile_id not in self.conversation_histories:
+            self.conversation_histories[self.current_profile_id] = []
+        return self.conversation_histories[self.current_profile_id]
+    
+    def clear_current_profile_history(self):
+        """Clear conversation history for current profile only"""
+        self.conversation_histories[self.current_profile_id] = []
+        print(f"Conversation history cleared for profile: {self.current_profile_id}")
+    
+    def clear_profile_history(self, profile_id: str):
+        """Clear conversation history for a specific profile"""
+        if profile_id in self.conversation_histories:
+            self.conversation_histories[profile_id] = []
+            print(f"Cleared conversation history for profile: {profile_id}")
+        else:
+            print(f"No conversation history found for profile: {profile_id}")
 
 # Usage example
 if __name__ == "__main__":
@@ -458,7 +580,7 @@ if __name__ == "__main__":
         
         for query in test_queries:
             print(f"\n🔍 Query: {query}")
-            result = rag.get_answer(query)
+            result = rag.get_answer(query)  # No profile for test queries
             print(f"📋 Confidence: {result['confidence']:.3f}")
             print(f"🤖 Method: {result['method']}")
             print(f"💡 Answer: {result['answer'][:200]}...")

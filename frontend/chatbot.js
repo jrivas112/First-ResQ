@@ -29,31 +29,32 @@ async function sendMessage() {
   const aiMode = ragOnlyMode ? "RAG Only" : "Enhanced AI";
   
   const { age,  sex, blood_group, pre_cond } = profile;
-  let combinedMessage;
-  if(profile.id === 'guest'){
-    combinedMessage = `${userMessage}`;
-  }else{
-    const contextString =
-      `Information:\n` +
-      `- Age: ${age || "N/A"|| "NA"}\n` +
-      `- Gender: ${sex || "N/A" || "NA"}\n`+
-      `- Blood Group: ${blood_group || "N/A"|| "NA"}\n` +
-      `- Pre-existing Conditions: ${pre_cond || "None"}\n` +
-      `Please consider these details when answering the following question:`;
-    combinedMessage = `${contextString} ${userMessage}`;
+  
+  // Send user query and profile separately (don't combine them at frontend)
+  const requestBody = {
+    message: userMessage,  // Pure user query only
+    mode: "chat",
+    sessionId: profile.id,  // Use profile ID as session ID for conversation history
+    attachments: [],
+    reset: false
+  };
+  
+  // Add profile context only if not guest
+  if (profile.id !== 'guest') {
+    requestBody.profile = {
+      age: age || "N/A",
+      gender: sex || "N/A", 
+      blood_group: blood_group || "N/A",
+      pre_existing_conditions: pre_cond || "None"
+    };
   }
+
 // Send to backend
   try {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-         message: combinedMessage, 
-         mode: "chat",
-         sessionId: "frontend-session",
-         attachments: [],
-         reset: false
-      })
+      body: JSON.stringify(requestBody)
     });
 
     const result = await response.json();
@@ -126,9 +127,16 @@ document.addEventListener("DOMContentLoaded", function() {
 // Clear conversation history
 async function clearConversation() {
   try {
+    const profile = window.profileManager?.getCurrentProfile() || { id: 'guest', name: 'Guest' };
+    
+    if (!confirm(`Are you sure you want to clear the conversation history for ${profile.name}?`)) {
+      return;
+    }
+
     const response = await fetch("http://localhost:8000/clear-conversation", {
       method: "POST",
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: profile.id })
     });
     
     const result = await response.json();
@@ -137,10 +145,12 @@ async function clearConversation() {
       // Clear the chat box visual history
       document.getElementById("chat-box").innerHTML = "";
       
+      const profileInfo = profile.id === "guest" ? "Guest session" : `Profile: ${profile.name}`;
       // Show confirmation message
       document.getElementById("chat-box").innerHTML += 
         `<div class="bubble bot system-message">
-          <strong>🔄 System:</strong> Conversation history cleared. Starting fresh!
+          <strong>🧹 Conversation Cleared (${profileInfo})</strong><br>
+          Your conversation history has been reset. You can start fresh!
         </div>`;
     }
   } catch (err) {
@@ -155,14 +165,17 @@ async function clearConversation() {
 // Get conversation summary
 async function getConversationSummary() {
   try {
-    const response = await fetch("http://localhost:8000/conversation-summary");
+    const profile = window.profileManager?.getCurrentProfile() || { id: 'guest', name: 'Guest' };
+    
+    const response = await fetch(`http://localhost:8000/conversation-summary?sessionId=${profile.id}`);
     const summary = await response.json();
     
     if (summary.status === "success" && summary.total_exchanges > 0) {
       const chatBox = document.getElementById("chat-box");
+      const profileInfo = summary.profile_id === "guest" ? "Guest" : `Profile: ${summary.profile_id}`;
       chatBox.innerHTML += 
         `<div class="bubble bot system-message">
-          <strong>💬 Conversation Summary:</strong><br>
+          <strong>💬 Conversation Summary (${profileInfo}):</strong><br>
           • Total questions: ${summary.total_exchanges}<br>
           • Recent topics: ${summary.recent_topics.join(", ")}<br>
           • Context enabled: ${summary.context_enabled ? "✅ Yes" : "❌ No"}
@@ -170,9 +183,10 @@ async function getConversationSummary() {
       chatBox.scrollTop = chatBox.scrollHeight;
     } else {
       const chatBox = document.getElementById("chat-box");
+      const profile = window.profileManager?.getCurrentProfile() || { name: 'Guest' };
       chatBox.innerHTML += 
         `<div class="bubble bot system-message">
-          <strong>💬 Conversation Summary:</strong><br>
+          <strong>💬 Conversation Summary (${profile.name}):</strong><br>
           No conversation history yet. Start by asking a first aid question!
         </div>`;
       chatBox.scrollTop = chatBox.scrollHeight;
