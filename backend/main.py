@@ -172,3 +172,47 @@ async def health_check():
         "selected_model": selected_model,
         "enhanced_mode": rag_initialized and len(available_models) > 0
     }
+
+@app.post("/clear-conversation")
+async def clear_conversation():
+    """Clear conversation history for a fresh start"""
+    try:
+        if first_aid_rag and hasattr(first_aid_rag, 'clear_conversation_history'):
+            first_aid_rag.clear_conversation_history()
+            return {
+                "status": "success",
+                "message": "Conversation history cleared"
+            }
+        else:
+            return {
+                "status": "info", 
+                "message": "No conversation history to clear"
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error clearing conversation: {str(e)}"
+        }
+
+@app.get("/conversation-summary")
+async def get_conversation_summary():
+    """Get current conversation summary"""
+    try:
+        if first_aid_rag and hasattr(first_aid_rag, 'get_conversation_summary'):
+            summary = first_aid_rag.get_conversation_summary()
+            return {
+                "status": "success",
+                **summary
+            }
+        else:
+            return {
+                "status": "info",
+                "total_exchanges": 0,
+                "recent_topics": [],
+                "context_enabled": False
+            }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error getting conversation summary: {str(e)}"
+        }

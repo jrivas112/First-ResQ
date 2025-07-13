@@ -122,3 +122,74 @@ document.addEventListener("DOMContentLoaded", function() {
     ragToggle.addEventListener("change", updateStatus);
   }
 });
+
+// Clear conversation history
+async function clearConversation() {
+  try {
+    const response = await fetch("http://localhost:8000/clear-conversation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    const result = await response.json();
+    
+    if (result.status === "success") {
+      // Clear the chat box visual history
+      document.getElementById("chat-box").innerHTML = "";
+      
+      // Show confirmation message
+      document.getElementById("chat-box").innerHTML += 
+        `<div class="bubble bot system-message">
+          <strong>🔄 System:</strong> Conversation history cleared. Starting fresh!
+        </div>`;
+    }
+  } catch (err) {
+    console.error("Error clearing conversation:", err);
+    document.getElementById("chat-box").innerHTML += 
+      `<div class="bubble bot system-message">
+        <strong>❌ Error:</strong> Could not clear conversation history.
+      </div>`;
+  }
+}
+
+// Get conversation summary
+async function getConversationSummary() {
+  try {
+    const response = await fetch("http://localhost:8000/conversation-summary");
+    const summary = await response.json();
+    
+    if (summary.status === "success" && summary.total_exchanges > 0) {
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML += 
+        `<div class="bubble bot system-message">
+          <strong>💬 Conversation Summary:</strong><br>
+          • Total questions: ${summary.total_exchanges}<br>
+          • Recent topics: ${summary.recent_topics.join(", ")}<br>
+          • Context enabled: ${summary.context_enabled ? "✅ Yes" : "❌ No"}
+        </div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    } else {
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML += 
+        `<div class="bubble bot system-message">
+          <strong>💬 Conversation Summary:</strong><br>
+          No conversation history yet. Start by asking a first aid question!
+        </div>`;
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  } catch (err) {
+    console.error("Error getting conversation summary:", err);
+    document.getElementById("chat-box").innerHTML += 
+      `<div class="bubble bot system-message">
+        <strong>❌ Error:</strong> Could not get conversation summary.
+      </div>`;
+  }
+}
+
+// Add keyboard shortcut for clearing conversation
+document.addEventListener("keydown", function(event) {
+  // Ctrl+Shift+C to clear conversation
+  if (event.ctrlKey && event.shiftKey && event.key === "C") {
+    clearConversation();
+  }
+});
