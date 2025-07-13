@@ -12,10 +12,13 @@ async function sendMessage() {
 
   const userMessage = input.value;
   if (!userMessage) return;
+  
 
+  input.value = "";
+  input.focus();
   const profile = window.profileManager
     ? window.profileManager.getCurrentProfile()
-    : { id: 'guest', name: 'Guest', age: '', blood_group: '', pre_cond: '' };
+    : { id: 'guest', name: 'Guest', age: '', sex:'', blood_group: '', pre_cond: '' };
 
   // Display user message;
   chatBox.innerHTML += `<div class='bubble user'><strong>${profile.name}:</strong> ${userMessage}</div>`;
@@ -24,23 +27,28 @@ async function sendMessage() {
   // Choose endpoint based on toggle
   const endpoint = ragOnlyMode ? "http://localhost:8000/ask-rag-only" : "http://localhost:8000/ask";
   const aiMode = ragOnlyMode ? "RAG Only" : "Enhanced AI";
+  
+  const { age,  sex, blood_group, pre_cond } = profile;
 
-  const { age, blood_group, pre_cond } = profile;
-  const payload = { message: userMessage, mode: 'chat', sessionId: 'frontend-session', attachments: [], reset: false, profile: { age, blood_group, pre_cond } };
-
-  // Send to backend
+  const contextString =
+    `Information:\n` +
+    `- Age: ${age || "N/A"|| "NA"}\n` +
+    `- Gender: ${sex || "N/A" || "NA"}\n`+
+    `- Blood Group: ${blood_group || "N/A"|| "NA"}\n` +
+    `- Pre-existing Conditions: ${pre_cond || "None"}\n` +
+    `Please consider these details when answering the following question:`;
+  const combinedMessage = `${contextString} ${userMessage}`;
+// Send to backend
   try {
     const response = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: userMessage,
-        mode: "chat",
-        sessionId: "frontend-session",
-        attachments: [],
-        reset: false
+         message: combinedMessage, 
+         mode: "chat",
+         sessionId: "frontend-session",
+         attachments: [],
+         reset: false
       })
     });
 
@@ -78,7 +86,6 @@ async function sendMessage() {
     </div>`;
   }
 
-  input.value = "";
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
