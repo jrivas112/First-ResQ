@@ -147,3 +147,70 @@ button {
   flex-direction: column;
   padding: 10px;
 }
+
+.conversation-controls {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.control-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.clear-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.clear-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.summary-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.summary-btn:hover {
+  background: #138496;
+  transform: translateY(-1px);
+}
+
+.system-message {
+  background: #fff3cd !important;
+  border: 1px solid #ffeaa7;
+  color: #856404 !important;
+  font-style: italic;
+}
+
+/* System message styling */
+.bubble.system-message {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  font-size: 0.9em;
+  margin: 8px 0;
+}
+
+.bubble.system-message strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Conversation control buttons animation */
+.controls button:active {
+  transform: scale(0.95);
+}
