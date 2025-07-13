@@ -6,6 +6,7 @@ COPY index.html /usr/share/nginx/html/
 COPY chatbot.js /usr/share/nginx/html/
 COPY profileManager.js /usr/share/nginx/html/
 COPY style/ /usr/share/nginx/html/style/
+COPY banner.gif /usr/share/nginx/html/
 
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
