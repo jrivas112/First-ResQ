@@ -29,15 +29,19 @@ async function sendMessage() {
   const aiMode = ragOnlyMode ? "RAG Only" : "Enhanced AI";
   
   const { age,  sex, blood_group, pre_cond } = profile;
-
-  const contextString =
-    `Information:\n` +
-    `- Age: ${age || "N/A"|| "NA"}\n` +
-    `- Gender: ${sex || "N/A" || "NA"}\n`+
-    `- Blood Group: ${blood_group || "N/A"|| "NA"}\n` +
-    `- Pre-existing Conditions: ${pre_cond || "None"}\n` +
-    `Please consider these details when answering the following question:`;
-  const combinedMessage = `${contextString} ${userMessage}`;
+  let combinedMessage;
+  if(profile.id === 'guest'){
+    combinedMessage = `${userMessage}`;
+  }else{
+    const contextString =
+      `Information:\n` +
+      `- Age: ${age || "N/A"|| "NA"}\n` +
+      `- Gender: ${sex || "N/A" || "NA"}\n`+
+      `- Blood Group: ${blood_group || "N/A"|| "NA"}\n` +
+      `- Pre-existing Conditions: ${pre_cond || "None"}\n` +
+      `Please consider these details when answering the following question:`;
+    combinedMessage = `${contextString} ${userMessage}`;
+  }
 // Send to backend
   try {
     const response = await fetch(endpoint, {
