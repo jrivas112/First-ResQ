@@ -21,6 +21,15 @@ h1, h2 {
   margin-bottom: 0.5em;
 }
 
+.banner-gif {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  margin-bottom: 20px;
+  border-radius: 0 0 12px 12px;
+}
+
 .chat-container {
   /*width: 400px;*/
   background: white;
