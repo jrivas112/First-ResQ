@@ -28,6 +28,14 @@
               </label>
               <small class="toggle-hint">Toggle ON for fastest responses using only the knowledge base</small>
             </div>
+            <div class="conversation-controls">
+              <button onclick="clearConversation()" class="control-btn clear-btn" title="Clear conversation history (Ctrl+Shift+C)">
+                🔄 Clear Chat
+              </button>
+              <button onclick="getConversationSummary()" class="control-btn summary-btn" title="Show conversation summary">
+                💬 Summary
+              </button>
+            </div>
           <div class="profile-selector">
             <label for="profile-select">Profile:</label>
             <select id="profile-select"></select>

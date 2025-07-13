@@ -24,6 +24,7 @@ class EnhancedFirstAidRAG:
         self.vectors_file = "question_vectors.pkl"
         self.available_models = []
         self.preferred_models = ["qwen2:1.5b", "phi3:mini", "gemma:2b", "mistral:latest", "mistral", "llama2:7b", "llama2"]  # Order by speed and preference
+        self.conversation_history = []  # Initialize conversation history
         
     def preprocess_text(self, text: str) -> str:
         """Simple text preprocessing"""
@@ -195,12 +196,26 @@ class EnhancedFirstAidRAG:
             return None
     
     def get_answer(self, query: str, similarity_threshold: float = 0.1) -> Dict:
-        """Get enhanced answer using RAG + Ollama"""
-        similar_questions = self.search_similar_questions(query, top_k=3)
+        """Get enhanced answer using RAG + Ollama with smart conversation context"""
+        # Store original query for history
+        original_query = query
+        
+        # Check if this is just a greeting first
+        if self.is_greeting(query):
+            greeting_response = self.get_greeting_response(query)
+            self.update_conversation_history(original_query, greeting_response['answer'])
+            return greeting_response
+        
+        # Add conversation context if this seems like a follow-up question
+        contextual_query = self.add_conversation_context(query)
+        
+        similar_questions = self.search_similar_questions(contextual_query, top_k=3)
         
         # Try Ollama-enhanced response first
-        ollama_response = self.get_ollama_enhanced_answer(query, similar_questions)
+        ollama_response = self.get_ollama_enhanced_answer(contextual_query, similar_questions)
         if ollama_response:
+            # Update conversation history with the original query and response
+            self.update_conversation_history(original_query, ollama_response['answer'])
             return ollama_response
         
         # Fallback to pure RAG
@@ -334,6 +349,101 @@ Use the knowledge base information and expand on it with helpful details."""
         except Exception as e:
             print(f"Error testing Ollama: {e}")
             return False
+    
+    def clear_conversation_history(self):
+        """Clear conversation history for a fresh start"""
+        self.conversation_history = []
+        print("Conversation history cleared")
+    
+    def get_conversation_summary(self) -> Dict:
+        """Get a summary of the current conversation"""
+        return {
+            "total_exchanges": len(self.conversation_history),
+            "recent_topics": [q['question'][:50] + "..." if len(q['question']) > 50 else q['question'] 
+                            for q in self.conversation_history[-3:]] if self.conversation_history else [],
+            "context_enabled": True
+        }
+    
+    def is_greeting(self, query: str) -> bool:
+        """Detect if the query is just a greeting or casual conversation"""
+        greetings = [
+            "hi", "hello", "hey", "good morning", "good afternoon", "good evening",
+            "greetings", "what's up", "how are you", "howdy", "yo", "sup",
+            "good day", "hiya", "thanks", "thank you", "bye", "goodbye"
+        ]
+        
+        query_lower = query.lower().strip()
+        
+        # Check for exact matches or simple variations
+        for greeting in greetings:
+            if query_lower == greeting or query_lower == greeting + "!" or query_lower == greeting + ".":
+                return True
+        
+        # Check for very short, non-medical queries
+        if len(query_lower) <= 3 and query_lower.isalpha():
+            return True
+            
+        return False
+    
+    def get_greeting_response(self, query: str) -> Dict:
+        """Generate a friendly greeting response"""
+        friendly_responses = [
+            "Hello! I'm QHelper AI, your emergency first aid assistant. How can I help you today?",
+            "Hi there! I'm here to help with first aid questions and emergency guidance. What do you need assistance with?",
+            "Hello! I'm QHelper AI. Ask me about first aid, emergency procedures, or medical guidance. How can I assist you?",
+            "Hi! I'm your first aid assistant. Whether it's treating wounds, handling emergencies, or general health questions - I'm here to help!"
+        ]
+        
+        # Simple hash-based selection for consistency
+        response_index = abs(hash(query.lower())) % len(friendly_responses)
+        
+        return {
+            "answer": f"<p>{friendly_responses[response_index]}</p><p><strong>Quick examples:</strong></p><ul><li>\"How do I treat a cut?\"</li><li>\"What should I do if someone is choking?\"</li><li>\"My child has a fever, what should I do?\"</li></ul>",
+            "confidence": 1.0,
+            "source": "Friendly greeting response",
+            "similar_questions": [],
+            "method": "greeting"
+        }
+    
+    def detect_follow_up_question(self, query: str) -> bool:
+        """Detect if the query is a follow-up question that needs context"""
+        follow_up_indicators = [
+            "what about", "how about", "what if", "and if", "also",
+            "what happens if", "but what", "what should", "how can",
+            "what else", "anything else", "more about", "tell me more",
+            "what next", "then what", "after that", "also what",
+            "but if", "however", "instead", "alternatively"
+        ]
+        
+        query_lower = query.lower()
+        return any(indicator in query_lower for indicator in follow_up_indicators)
+    
+    def add_conversation_context(self, query: str) -> str:
+        """Add conversation context only if it seems like a follow-up question"""
+        if not self.conversation_history or not self.detect_follow_up_question(query):
+            return query  # No context needed for fresh questions
+        
+        # Add context from the most recent Q&A
+        recent = self.conversation_history[-1]
+        context = f"""Previous conversation context:
+Q: {recent['question']}
+A: {recent['answer'][:150]}{'...' if len(recent['answer']) > 150 else ''}
+
+Current question: {query}"""
+        
+        return context
+    
+    def update_conversation_history(self, question: str, answer: str):
+        """Update conversation history with the latest Q&A pair"""
+        self.conversation_history.append({
+            'question': question,
+            'answer': answer,
+            'timestamp': pd.Timestamp.now()
+        })
+        
+        # Keep only the most recent entries (limit to 5)
+        if len(self.conversation_history) > 5:
+            self.conversation_history = self.conversation_history[-5:]
 
 # Usage example
 if __name__ == "__main__":
