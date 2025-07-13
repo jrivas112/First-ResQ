@@ -45,8 +45,14 @@
           </div>
           
           <div id="chat-box"></div>
+
+          <!-- Loading animation -->
+          <div id="loading-indicator" class="loading-indicator" style="display:none;">
+            <span class="loader"></span> <span>First Res-Q is thinking...</span>
+          </div>
+
           <input type="text" id="user-input" placeholder="Ask a first aid question..." onkeydown="handleKey(event)"/>
-          <button onclick="sendMessage()">⌯⌲</button> <!--ᯓ➤-->
+          <button id="send-btn" onclick="sendMessage()">🚑</button> <!--ᯓ➤⌯⌲-->
         </div>
         <div id="profile-modal" class="modal hidden">
           <div class="modal-content">

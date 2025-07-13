@@ -9,6 +9,7 @@ async function sendMessage() {
   const input = document.getElementById("user-input");
   const chatBox = document.getElementById("chat-box");
   const ragOnlyMode = document.getElementById("rag-only-mode")?.checked || false;
+  const loading = document.getElementById("loading-indicator");
 
   const userMessage = input.value;
   if (!userMessage) return;
@@ -16,13 +17,16 @@ async function sendMessage() {
 
   input.value = "";
   input.focus();
+
+  // Show loading indicator
+  if (loading) loading.style.display = "flex";
+
   const profile = window.profileManager
     ? window.profileManager.getCurrentProfile()
     : { id: 'guest', name: 'Guest', age: '', sex:'', blood_group: '', pre_cond: '' };
 
   // Display user message;
   chatBox.innerHTML += `<div class='bubble user'><strong>${profile.name}:</strong> ${userMessage}</div>`;
-
 
   // Choose endpoint based on toggle
   const endpoint = ragOnlyMode ? "http://localhost:8000/ask-rag-only" : "http://localhost:8000/ask";
@@ -79,15 +83,18 @@ async function sendMessage() {
       };
       methodInfo += ` <small>[${methodLabels[result.method] || result.method}]</small>`;
     }
-
+    
     chatBox.innerHTML += `<div class="bubble bot">
-      <strong>QHelper AI (${aiMode}):</strong> ${botReply}${methodInfo}
+      <strong>First Res-Q (${aiMode}):</strong> ${botReply}${methodInfo}
     </div>`;
   } catch (err) {
     chatBox.innerHTML += `<div class="bubble bot">
-      <strong>QHelper AI:</strong> Network error: ${err.message}
+      <strong>First Res-Q:</strong> Network error: ${err.message}
       <br><small><em>The local AI should work without internet. Please check if the backend is running.</em></small>
     </div>`;
+  } finally {
+    // Hide loading indicator
+    if (loading) loading.style.display = "none";
   }
 
   chatBox.scrollTop = chatBox.scrollHeight;
