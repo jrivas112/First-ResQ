@@ -16,58 +16,70 @@
 
   <main>
     <section>
-        <div class="chat-container">
-          <div class="ai-controls">
-            <div class="status-indicator">
-              <span id="status-text">🟢 Offline-First AI Assistant Ready</span>
-            </div>
-            <div class="ai-toggle">
-              <label>
-                <input type="checkbox" id="rag-only-mode"> 
-                Use RAG Only (No LLM Enhancement)
-              </label>
-              <small class="toggle-hint">Toggle ON for fastest responses using only the knowledge base</small>
-            </div>
-            <div class="conversation-controls">
-              <button onclick="clearConversation()" class="control-btn clear-btn" title="Clear conversation history (Ctrl+Shift+C)">
-                🔄 Clear Chat
-              </button>
-              <button onclick="getConversationSummary()" class="control-btn summary-btn" title="Show conversation summary">
-                💬 Summary
-              </button>
-            </div>
+      <div class="chat-container">
+        <div class="ai-controls">
+          <div class="status-indicator">
+            <span id="status-text">🟢 Offline-First AI Assistant Ready</span>
+          </div>
+          <div class="ai-toggle">
+            <label>
+              <input type="checkbox" id="rag-only-mode">
+              Use RAG Only (No LLM Enhancement)
+            </label>
+            <small class="toggle-hint">
+              Toggle ON for fastest responses using only the knowledge base
+            </small>
+          </div>
+          <div class="conversation-controls">
+            <button onclick="clearConversation()" class="control-btn clear-btn" title="Clear conversation (Ctrl+Shift+C)">
+              🔄 Clear Chat
+            </button>
+            <button onclick="getConversationSummary()" class="control-btn summary-btn" title="Show summary">
+              💬 Summary
+            </button>
+          </div>
+
           <div class="profile-selector">
             <label for="profile-select">Profile:</label>
             <select id="profile-select"></select>
+            <!-- NEW: separate button to open the “New Profile” modal -->
+            <button id="create-profile-btn">New Profile</button>
             <button id="edit-profile-btn" disabled>Edit</button>
             <button id="delete-profile-btn" disabled>Delete</button>
           </div>
-          </div>
-          
-          <div id="chat-box"></div>
-          <input type="text" id="user-input" placeholder="Ask a first aid question..." onkeydown="handleKey(event)"/>
-          <button onclick="sendMessage()">⌯⌲</button> <!--ᯓ➤-->
         </div>
-        <div id="profile-modal" class="modal hidden">
-          <div class="modal-content">
-            <h2>New Profile</h2>
-            <form id="profile-form">
-              <input name="name" type="text" placeholder="Name" required>
-              <input name="age" type="text" placeholder="Age" required>
-              <input name="sex" type="text" placeholder="Gender/Sex" required>
-              <input name="blood_group" type="text" placeholder="Blood Group" required>
-              <input name="pre_cond" type="text" placeholder="Preexisting Conditions/Allergies" required>
-              <div class="actions">
-                <button type="button" id="cancel-btn">Cancel</button>
-                <button type="submit">Save</button>
-              </div>
-            </form>
-          </div>
+
+        <div id="chat-box"></div>
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Ask a first aid question…"
+          onkeydown="handleKey(event)"
+        />
+        <button onclick="sendMessage()">⌯⌲</button>
+      </div>
+
+      <!-- Profile modal (unchanged) -->
+      <div id="profile-modal" class="modal hidden">
+        <div class="modal-content">
+          <h2>New Profile</h2>
+          <form id="profile-form">
+            <input name="name" type="text" placeholder="Name" required>
+            <input name="age" type="text" placeholder="Age" required>
+            <input name="sex" type="text" placeholder="Gender/Sex" required>
+            <input name="blood_group" type="text" placeholder="Blood Group" required>
+            <input name="pre_cond" type="text" placeholder="Preexisting Conditions/Allergies" required>
+            <div class="actions">
+              <button type="button" id="cancel-btn">Cancel</button>
+              <button type="submit">Save</button>
+            </div>
+          </form>
         </div>
-        <script src="profileManager.js"></script>
-        <script src="chatbot.js"></script>
+      </div>
+
+      <script src="profileManager.js"></script>
+      <script src="chatbot.js"></script>
     </section>
   </main>
-
 </body>
 </html>
