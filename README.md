@@ -5,6 +5,77 @@ A completely offline-capable first aid chatbot application with local AI capabil
 ## 💻 Development Note
 This application was developed and optimized on **Snapdragon X-Elite** hardware. The fast CPU and generous memory of the X-Elite platform made development incredibly smooth, allowing for rapid iteration and testing of AI models. The efficient architecture makes it perfect for deployment on modern ARM-based systems while maintaining full compatibility with traditional x86 platforms.
 
+## 🏗️ Development vs Production Stack
+
+### **Development Stack**
+For active development and testing (default configuration):
+
+- **Frontend:** Vite development server with hot reload
+  - Port: 3000
+  - Volume mounting for live file changes
+  - Hot module replacement (HMR)
+  - File watching with polling for Docker compatibility
+
+- **Backend:** FastAPI with auto-reload
+  - Port: 8000
+  - Volume mounting for live code changes
+  - Development logging enabled
+  - Debug mode active
+
+- **Configuration:** `compose.yaml`
+  ```yaml
+  frontend:
+    command: npm run dev -- --host 0.0.0.0
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+  ```
+
+### **Production Stack**
+For deployment in production environments:
+
+- **Frontend:** Nginx serving static files
+  - Optimized build artifacts
+  - Compressed assets
+  - Production-ready configurations
+  - Enhanced security headers
+
+- **Backend:** FastAPI with production WSGI
+  - Optimized for performance
+  - Production logging
+  - Error handling and monitoring
+  - Resource optimization
+
+- **Deployment Considerations:**
+  - Remove development volumes
+  - Use production Docker images
+  - Add reverse proxy (Nginx)
+  - Enable SSL/TLS certificates
+  - Add monitoring and logging
+  - Configure resource limits
+
+### **Key Differences**
+
+| Feature | Development | Production |
+|---------|-------------|------------|
+| **File Changes** | Live reload with volumes | Static build artifacts |
+| **Performance** | Development optimized | Production optimized |
+| **Security** | Relaxed for development | Hardened configurations |
+| **Logging** | Verbose debug logging | Structured production logs |
+| **Error Handling** | Detailed error messages | User-friendly error pages |
+| **Resources** | Development convenience | Resource efficiency |
+
+### **Switching to Production**
+To deploy in production:
+1. Create production Dockerfile variants
+2. Remove development volumes and commands
+3. Add Nginx reverse proxy
+4. Configure environment variables
+5. Set up SSL certificates
+6. Add monitoring and logging
+
 ## 🚀 Features
 
 - **🔌 Pure Offline Operation** - Works completely without internet after setup

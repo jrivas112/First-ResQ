@@ -140,7 +140,7 @@ async function clearConversation() {
       return;
     }
 
-    const response = await fetch("http://localhost:8000/clear-conversation", {
+    const response = await fetch("/clear-conversation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId: profile.id })
@@ -174,7 +174,7 @@ async function getConversationSummary() {
   try {
     const profile = window.profileManager?.getCurrentProfile() || { id: 'guest', name: 'Guest' };
     
-    const response = await fetch(`http://localhost:8000/conversation-summary?sessionId=${profile.id}`);
+    const response = await fetch(`/conversation-summary?sessionId=${profile.id}`);
     const summary = await response.json();
     
     if (summary.status === "success" && summary.total_exchanges > 0) {
