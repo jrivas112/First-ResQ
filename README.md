@@ -35,7 +35,7 @@ Before you begin, ensure you have the following installed:
 
 ## 🛠️ Installation & Setup
 **Make sure you download and install docker**
-1) **Open docker desktop application before doing the following commands**
+1) **!!Open docker desktop application before doing the following commands!!**
 ### 1. Clone the Repository
 
 ```bash
