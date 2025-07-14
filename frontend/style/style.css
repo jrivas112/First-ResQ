@@ -23,6 +23,11 @@ h1, h2 {
   font-family: 'Segoe UI', sans-serif;
 }
 
+h3 {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: medium;
+}
+
 .banner-gif {
   display: block;
   width: 100%;
@@ -298,6 +303,18 @@ button {
   cursor: pointer;
 }
 
+#create-profile-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  border-radius: 20px;
+  padding: 3px 10px 6px 10px;
+  margin-left: 10px;
+}
+
 #edit-profile-btn {
   background: #28a745;
   color: white;
@@ -331,8 +348,21 @@ button {
 #profile-form input, #profile-form select {
   font-family: 'Segoe UI', sans-serif;
   padding: 5px;
-  margin: 5px 10px 5px 0px;
+  margin: 5px 10px 10px 0px;
   box-sizing: border-box;
   border-radius: 20px;
   border: 1px solid #ccc;
+}
+
+#cancel-btn, #save-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  border-radius: 20px;
+  padding: 3px 10px 6px 10px;
+  margin-right: 10px;
+  margin-top: 10px;
 }
