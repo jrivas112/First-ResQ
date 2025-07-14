@@ -2,6 +2,9 @@
 
 A completely offline-capable first aid chatbot application with local AI capabilities, built with FastAPI backend, HTML/CSS/JS frontend, and containerized AI services. **No internet required after initial setup!**
 
+## 💻 Development Note
+This application was developed and optimized on **Snapdragon X-Elite** hardware. The fast CPU and generous memory of the X-Elite platform made development incredibly smooth, allowing for rapid iteration and testing of AI models. The efficient architecture makes it perfect for deployment on modern ARM-based systems while maintaining full compatibility with traditional x86 platforms.
+
 ## 🚀 Features
 
 - **🔌 Pure Offline Operation** - Works completely without internet after setup
