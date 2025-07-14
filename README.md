@@ -686,6 +686,47 @@ If you encounter issues:
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 
 ---
+## 🔐 Security
+
+**First Res-Q** is designed with privacy and security at its core. Here’s how it protects user data:
+
+### 1. Fully Local Operation
+All components of the application — including the chatbot, AI processing, and data storage — run entirely on the user's device.
+
+- No data is sent to the cloud  
+- No external APIs are called  
+- No third-party analytics are used  
+
+This ensures **maximum privacy** and complete control over your data.
+
+### 2. Client-Side Encryption
+User profiles are encrypted directly in the browser using:
+
+- **AES-GCM** with a 256-bit key  
+- Key derived via **PBKDF2** with 200,000 iterations  
+
+Even if someone gains access to your browser’s local storage, the encrypted data is **unreadable without the correct passphrase**.
+
+### 3. Single Passphrase Model
+The app uses a **shared passphrase** to encrypt and unlock all user profiles. This is not per-user authentication, but a simplified encryption model designed for:
+
+- Trusted, offline environments  
+- Single-user or family use cases  
+
+On first load, users are prompted to create a passphrase. On subsequent visits, they can:
+
+- Enter the passphrase to unlock profiles  
+- Or proceed in **Guest Mode**, where no personal data is stored or accessed
+
+### 4. No Server-Side Authentication
+There’s no need for:
+
+- Server-side login systems  
+- Multi-user password storage  
+- External identity providers  
+
+This keeps the system **lightweight, secure, and easy to use**, while maintaining strong data protection standards.
+
 ## Contast Us
 - https://www.linkedin.com/in/juliomidence/
 - https://www.linkedin.com/in/krutadnyata-khandu-naik-745484129/
