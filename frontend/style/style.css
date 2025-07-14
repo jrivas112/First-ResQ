@@ -47,7 +47,7 @@ h3 {
 
 .ai-controls {
   margin-bottom: 20px;
-  padding: 15px;
+  padding: 5px 15px;
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e9ecef;
@@ -230,7 +230,6 @@ button {
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.85em;
-  /*font-weight: 500;*/
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -273,7 +272,7 @@ button {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  /*box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);*/
   font-size: 0.9em;
   margin: 8px 0;
 }
@@ -304,7 +303,7 @@ button {
 }
 
 #create-profile-btn {
-  background: #007bff;
+  background: #4e75ff;
   color: white;
   border: none;
   cursor: pointer;
@@ -316,7 +315,7 @@ button {
 }
 
 #edit-profile-btn {
-  background: #28a745;
+  background: #1dd548;
   color: white;
   border: none;
   cursor: pointer;
