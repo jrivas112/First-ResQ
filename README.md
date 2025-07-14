@@ -29,7 +29,7 @@ This application was developed and optimized on **Snapdragon X-Elite** hardware.
   - 🤖 **AI Reasoning** - Ollama-powered responses for general questions
   - 📚 **Knowledge Base Only** - Fast CSV lookup when LLM unavailable
   - 🆘 **General Advice** - Safety fallback for unmatched queries
-- **1000+ First Aid Q&A Pairs** - Comprehensive emergency knowledge base
+- **600+ First Aid Q&A Pairs** - Comprehensive emergency knowledge base
 - **Web UI for AI Models** - Manage local models via Ollama Web UI
 - **Containerized Architecture** - Complete Docker setup for easy deployment
 - **Cross-Platform** - Runs on Windows, macOS, and Linux
