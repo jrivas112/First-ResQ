@@ -1,5 +1,18 @@
-# First Res-Q - Offline-First AI Emergency Assistant
-A completely offline-capable first aid chatbot application with local AI capabilities, built with FastAPI backend, HTML/CSS/JS frontend, and containerized AI services. **No internet required after initial setup!**
+### 🚑 First Res-Q – Offline-First AI Emergency Assistant
+
+**First Res-Q** is a fully offline-capable **first aid chatbot** designed to assist in emergency situations without requiring an internet connection after initial setup. Built with a **FastAPI backend**, a responsive **HTML/CSS/JavaScript frontend**, and **containerized AI services**, it ensures reliable performance in any environment.
+
+The system uses a **Retrieval-Augmented Generation (RAG)** pipeline grounded in a curated database of frequently asked first aid questions. When a user submits a query, the system searches for the most relevant entry in the database and passes it to **Ollama**, which uses the retrieved context to generate accurate, grounded responses.
+
+✅ **Key Features:**
+- 100% offline functionality after setup  
+- AI-powered, context-aware responses  
+- Grounded in real first aid data for higher accuracy  
+- Lightweight and containerized for portability
+
+**No internet required after initial setup!**
+
+Would you like this formatted for a README, a slide deck, or a landing page?
 
 ## 💻 Development Note
 This application was developed and optimized on **Snapdragon X-Elite** hardware. The fast CPU and generous memory of the X-Elite platform made development incredibly smooth, allowing for rapid iteration and testing of AI models. The efficient architecture makes it perfect for deployment on modern ARM-based systems while maintaining full compatibility with traditional x86 platforms.
