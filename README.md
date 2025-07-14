@@ -45,7 +45,7 @@ cd QHelper-AI
 
 ### 2. Quick Start
 
-**Option A: Use Setup Scripts (Recommended) in dir**
+**Option A: Use Setup Scripts (Recommended) in root project directory**
 
 **Windows:**
 ```batch
@@ -643,9 +643,6 @@ curl http://localhost:11434/api/generate -d '{
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
-
-[Add your license information here]
 
 ## 🆘 Support
 
@@ -663,5 +660,9 @@ If you encounter issues:
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 
 ---
-
+## Contast Us
+- https://www.linkedin.com/in/juliomidence/
+- https://www.linkedin.com/in/krutadnyata-khandu-naik-745484129/
+- https://www.linkedin.com/in/amrutha-challa-b6a208223/
+- https://www.linkedin.com/in/saya-deshpande/
 **Happy First Aid Learning! 🚑💡**
