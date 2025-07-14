@@ -7,7 +7,7 @@ body {
 }
 
 header, footer {
-  background-color: #0078d7;
+  background-color: #819dff;
   color: white;
   padding: 2em;
   text-align: center;
@@ -15,10 +15,12 @@ header, footer {
 
 main {
   margin-top: 20px;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 h1, h2 {
   margin-bottom: 0.5em;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .banner-gif {
@@ -100,7 +102,7 @@ h1, h2 {
 }
 
 .bubble.user {
-  background: #0078d7;
+  background: #819dff;
   color: white;
   margin-left: auto;
   text-align: right;
@@ -118,14 +120,42 @@ h1, h2 {
 }
 
 #user-input {
-  width: 90%;
+  width: 92%;
   padding: 8px;
-  font-family: Verdana, sans-serif;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 button {
   padding: 8px 12px;
   color: #333;
+}
+
+#send-btn {
+  background: #819dff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  border-radius: 20px;
+  float: right;
+  width: 5%;
+  height: 38px;
+  padding: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.send-icon {
+  width: 2.75em;
+  vertical-align: middle;
+}
+
+#send-btn:hover {
+  transform: translateY(-1px);
 }
 
 .bubble {
@@ -151,6 +181,30 @@ button {
   margin-right: auto;
 }
 
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-style: italic;
+  font-size: 0.9em;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff65d9;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 #chat-box {
   display: flex;
   flex-direction: column;
@@ -159,6 +213,7 @@ button {
 
 .conversation-controls {
   margin-top: 15px;
+  margin-bottom: 15px;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -170,7 +225,7 @@ button {
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.85em;
-  font-weight: 500;
+  /*font-weight: 500;*/
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -179,6 +234,8 @@ button {
 
 .clear-btn {
   background: #dc3545;
+  border-radius: 20px;
+  font-family: 'Segoe UI', sans-serif;
   color: white;
 }
 
@@ -189,6 +246,8 @@ button {
 
 .summary-btn {
   background: #17a2b8;
+  font-family: 'Segoe UI', sans-serif;
+  border-radius: 20px;
   color: white;
 }
 
@@ -222,4 +281,58 @@ button {
 /* Conversation control buttons animation */
 .controls button:active {
   transform: scale(0.95);
+}
+
+.profile-selector {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+#profile-select {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  padding: 5px;
+  margin-left: 5px;
+  border-radius: 20px;;
+  cursor: pointer;
+}
+
+#edit-profile-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  border-radius: 20px;
+  padding: 3px 10px 6px 10px;
+  margin-left: 10px;
+}
+
+#delete-profile-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  border-radius: 20px;
+  padding: 3px 10px 6px 10px;
+  margin-left: 10px;
+}
+
+#profile-form {
+  font-family: 'Segoe UI', sans-serif;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+#profile-form input, #profile-form select {
+  font-family: 'Segoe UI', sans-serif;
+  padding: 5px;
+  margin: 5px 10px 5px 0px;
+  box-sizing: border-box;
+  border-radius: 20px;
+  border: 1px solid #ccc;
 }
