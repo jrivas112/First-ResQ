@@ -69,6 +69,12 @@ async def ask_question(payload: ChatRequest):
         profile_dict = None
         profile_id = "guest"  # Default profile ID
         
+        # Debug: Show what we received in the request
+        print(f"=== API REQUEST DEBUG ===")
+        print(f"Message: {payload.message}")
+        print(f"SessionId: {payload.sessionId}")
+        print(f"Profile: {payload.profile}")
+        
         if payload.profile:
             profile_dict = {
                 'age': payload.profile.age,
@@ -76,11 +82,14 @@ async def ask_question(payload: ChatRequest):
                 'blood_group': payload.profile.blood_group,
                 'pre_existing_conditions': payload.profile.pre_existing_conditions
             }
+            print(f"Profile dict created: {profile_dict}")
         
-        # Extract profile ID from session or payload (you can extend this logic)
+        # Extract profile ID from session or payload
         if hasattr(payload, 'sessionId') and payload.sessionId:
-            # Use sessionId or create a profile ID mapping
             profile_id = payload.sessionId
+            print(f"Using profile ID from sessionId: {profile_id}")
+        
+        print(f"Calling get_answer with profile_id: {profile_id}, profile_dict: {profile_dict}")
         
         result = first_aid_rag.get_answer(payload.message, profile_dict, profile_id)
         

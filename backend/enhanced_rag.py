@@ -115,14 +115,14 @@ class EnhancedFirstAidRAG:
                     "temperature": 0.7,
                     "top_p": 0.9,
                     "top_k": 20,        # Reduce choices for faster decisions
-                    "num_predict": 300  # Limit response length for speed
+                    "num_predict": 800  # Increased for comprehensive first aid instructions
                 }
             elif "qwen2" in model.lower():
                 options = {
                     "temperature": 0.5,     # Lower for faster, very focused responses
                     "top_p": 0.85,         # Slightly more focused
                     "top_k": 10,           # Very fast token selection
-                    "num_predict": 200,    # Short responses for maximum speed
+                    "num_predict": 600,    # Increased for detailed medical responses
                     "repeat_penalty": 1.15  # Prevent repetition in small model
                 }
                 # Ultra-fast mode for qwen2
@@ -131,7 +131,7 @@ class EnhancedFirstAidRAG:
                     "temperature": 0.6,     # Slightly lower for faster, more focused responses
                     "top_p": 0.9,
                     "top_k": 15,           # Faster token selection
-                    "num_predict": 250,    # Shorter responses = faster generation
+                    "num_predict": 700,    # Increased for complete first aid instructions
                     "repeat_penalty": 1.1   # Prevent repetition loops
                 }
                 # Remove stop sequences for phi3 to prevent truncation
@@ -173,11 +173,15 @@ class EnhancedFirstAidRAG:
                         except json.JSONDecodeError:
                             continue
                 
-                # Debug logging
-                print(f"=== OLLAMA GENERATE STREAMING DEBUG ===")
-                print(f"Prompt length: {len(prompt)} chars")
+                # Debug logging - show complete prompt being sent to Ollama
+                print(f"=== OLLAMA PROMPT DEBUG ===")
                 print(f"Model: {model}")
                 print(f"Options: {options}")
+                print(f"Prompt length: {len(prompt)} chars")
+                print(f"=== FULL PROMPT TO OLLAMA ===")
+                print(prompt)
+                print(f"=== END OF PROMPT ===")
+                print(f"Response length: {len(full_response)} chars")
                 print(f"Response length: {len(full_response)} chars")
                 print(f"Done: {final_data.get('done', 'unknown')}")
                 print(f"Total duration: {final_data.get('total_duration', 'unknown')}")
@@ -247,6 +251,12 @@ class EnhancedFirstAidRAG:
     
     def get_ollama_enhanced_answer(self, query: str, similar_questions: List[Dict], profile_info: Dict = None) -> Dict:
         """Get answer using Ollama with RAG context and profile information"""
+        # Debug: Show what profile info we received
+        print(f"=== PROFILE INFO DEBUG ===")
+        print(f"Profile info received: {profile_info}")
+        print(f"Query: {query}")
+        print(f"Current profile ID: {getattr(self, 'current_profile_id', 'Not set')}")
+        
         # Create profile context string if profile info is provided
         profile_context = ""
         if profile_info:
@@ -259,12 +269,17 @@ class EnhancedFirstAidRAG:
 Please consider these details when providing your response.
 
 """
+            print(f"=== PROFILE CONTEXT CREATED ===")
+            print(profile_context)
+            print(f"⚠️  NOTE: Profile information will be used for context but filtered from response")
         
         if not similar_questions or similar_questions[0]['similarity'] < 0.05:
             # No good matches, use Ollama alone
-            prompt = f"""You are a helpful first aid assistant. Please provide a clear, practical response to this first aid question:
+            prompt = f"""You are a helpful first aid assistant. Please provide a clear, practical response to this first aid question (keep answers to 150-200 words):
 
 {profile_context}{query}
+
+IMPORTANT: Do NOT mention or repeat any patient information (age, gender, blood group, conditions) in your response. Use this information only as context to tailor your advice appropriately.
 
 Format your response using valid HTML with:
 - Use <h3> for section headings
@@ -277,8 +292,9 @@ Provide specific steps and safety information. If this is a serious emergency, a
             
             ollama_response = self.query_ollama(prompt)
             if ollama_response:
+                sanitized_response = self.sanitize_response(ollama_response.strip(), profile_info)
                 return {
-                    "answer": ollama_response.strip(),
+                    "answer": sanitized_response,
                     "confidence": 0.5,
                     "source": "AI reasoning (no specific match found)",
                     "similar_questions": [],
@@ -296,6 +312,8 @@ Provide specific steps and safety information. If this is a serious emergency, a
 
 {query}
 
+IMPORTANT: Do NOT mention or repeat any patient information (age, gender, blood group, conditions) in your response. Use this information only as context to tailor your advice appropriately.
+
 Format your response using valid HTML with:
 - Use <h3> for section headings
 - Use <ol> or <ul> for step-by-step instructions  
@@ -307,8 +325,9 @@ Use the knowledge base information and expand on it with helpful details."""
             
             ollama_response = self.query_ollama(prompt)
             if ollama_response:
+                sanitized_response = self.sanitize_response(ollama_response.strip(), profile_info)
                 return {
-                    "answer": ollama_response.strip(),
+                    "answer": sanitized_response,
                     "confidence": min(0.9, similar_questions[0]['similarity'] + 0.3),
                     "source": f"AI enhanced with knowledge from similar case",
                     "similar_questions": [q['question'][:80] + "..." if len(q['question']) > 80 else q['question'] for q in similar_questions[:3]],
@@ -377,6 +396,11 @@ Use the knowledge base information and expand on it with helpful details."""
     
     def get_conversation_summary(self, profile_id: str = "guest") -> Dict:
         """Get a summary of the current conversation - medical queries only for specified profile"""
+        print(f"=== CONVERSATION SUMMARY DEBUG ===")
+        print(f"Requested profile_id: {profile_id}")
+        print(f"All conversation histories: {list(self.conversation_histories.keys())}")
+        print(f"Total profiles with data: {len(self.conversation_histories)}")
+        
         # Set the profile for this operation
         original_profile = self.current_profile_id
         self.set_current_profile(profile_id)
@@ -386,15 +410,26 @@ Use the knowledge base information and expand on it with helpful details."""
             self.clean_conversation_history()
             
             current_history = self.get_current_conversation_history()
+            print(f"History length for profile '{profile_id}': {len(current_history)}")
             
-            return {
+            if current_history:
+                print(f"Recent questions:")
+                for i, entry in enumerate(current_history[-3:]):
+                    print(f"  {i+1}. {entry['question'][:100]}...")
+            else:
+                print("No conversation history found")
+            
+            result = {
                 "total_exchanges": len(current_history),
                 "recent_topics": [q['question'][:50] + "..." if len(q['question']) > 50 else q['question'] 
                                 for q in current_history[-3:]] if current_history else [],
                 "context_enabled": True,
                 "profile_id": profile_id,
-                "note": f"Only medical queries for profile '{profile_id}' are stored"
+                "note": f"All questions (except greetings) for profile '{profile_id}' are stored"
             }
+            print(f"Returning summary: {result}")
+            print(f"=== END CONVERSATION SUMMARY DEBUG ===")
+            return result
         finally:
             # Restore original profile
             if original_profile:
@@ -472,13 +507,21 @@ Current question: {query}"""
         return context
     
     def update_conversation_history(self, question: str, answer: str):
-        """Update conversation history with the latest Q&A pair - only for medical queries"""
-        # Don't store greetings, thanks, or very short non-medical queries
-        if self.is_greeting(question) or self.is_non_medical_query(question):
+        """Update conversation history with the latest Q&A pair - only filter out greetings"""
+        print(f"=== CONVERSATION HISTORY DEBUG ===")
+        print(f"Attempting to store question: '{question}'")
+        print(f"Current profile ID: {self.current_profile_id}")
+        
+        # Only filter out greetings - allow all other questions
+        if self.is_greeting(question):
+            print(f"❌ Question classified as greeting - NOT storing")
             return
             
+        print(f"✅ Question passed filters - STORING in history")
+        
         # Get the current profile's conversation history
         profile_history = self.get_current_conversation_history()
+        print(f"Current history length before adding: {len(profile_history)}")
         
         profile_history.append({
             'question': question,
@@ -492,53 +535,23 @@ Current question: {query}"""
         
         # Update the profile's conversation history
         self.conversation_histories[self.current_profile_id] = profile_history
+        print(f"History length after adding: {len(profile_history)}")
+        print(f"Total profiles with history: {len(self.conversation_histories)}")
+        print(f"=== END CONVERSATION HISTORY DEBUG ===")
 
-    def is_non_medical_query(self, query: str) -> bool:
-        """Detect if the query is non-medical and shouldn't be stored in history"""
-        non_medical_patterns = [
-            "test", "testing", "can you hear me", "are you working",
-            "what can you do", "help", "what are your capabilities",
-            "who are you", "what is your name", "how do you work",
-            "git", "github", "code", "programming", "software", "bug",
-            "error", "debug", "commit", "push", "pull", "branch",
-            "information:", "age:", "gender:", "blood", "profile",
-            "personal information", "user information", "medical history"
-        ]
-        
-        query_lower = query.lower().strip()
-        
-        # Check for very short queries (likely not medical)
-        if len(query_lower) <= 3:
-            return True
-        
-        # Check for profile/information patterns
-        if "age:" in query_lower or "gender:" in query_lower or "blood" in query_lower:
-            return True
-            
-        # Check if it looks like structured data (contains multiple colons or dashes)
-        if query_lower.count(':') >= 2 or query_lower.count(' - ') >= 2:
-            return True
-            
-        # Check for non-medical patterns
-        for pattern in non_medical_patterns:
-            if pattern in query_lower:
-                return True
-                
-        return False
-    
     def clean_conversation_history(self):
-        """Remove any non-medical entries that might have slipped through for current profile"""
+        """Remove any greeting entries that might have slipped through for current profile"""
         current_history = self.get_current_conversation_history()
         original_count = len(current_history)
         
         cleaned_history = [
             entry for entry in current_history 
-            if not (self.is_greeting(entry['question']) or self.is_non_medical_query(entry['question']))
+            if not self.is_greeting(entry['question'])
         ]
         
         cleaned_count = original_count - len(cleaned_history)
         if cleaned_count > 0:
-            print(f"Cleaned {cleaned_count} non-medical entries from conversation history for profile: {self.current_profile_id}")
+            print(f"Cleaned {cleaned_count} greeting entries from conversation history for profile: {self.current_profile_id}")
             self.conversation_histories[self.current_profile_id] = cleaned_history
     
     def set_current_profile(self, profile_id: str):
@@ -566,6 +579,59 @@ Current question: {query}"""
             print(f"Cleared conversation history for profile: {profile_id}")
         else:
             print(f"No conversation history found for profile: {profile_id}")
+
+    def sanitize_response(self, response: str, profile_info: Dict = None) -> str:
+        """Remove any accidentally included patient information from the response"""
+        if not profile_info:
+            return response
+            
+        original_response = response
+        sanitized = response
+        
+        # Remove specific patient details if they appear
+        if profile_info.get('age'):
+            # Remove age references like "25-year-old" or "age 25"
+            import re
+            age_patterns = [
+                rf"\b{profile_info['age']}-year-old\b",
+                rf"\bage {profile_info['age']}\b",
+                rf"\b{profile_info['age']} years old\b",
+                rf"\byour age of {profile_info['age']}\b"
+            ]
+            for pattern in age_patterns:
+                sanitized = re.sub(pattern, "", sanitized, flags=re.IGNORECASE)
+        
+        if profile_info.get('gender'):
+            # Remove specific gender references when unnecessary
+            gender = profile_info['gender'].lower()
+            # Only remove if it seems like it's referencing the patient specifically
+            unnecessary_refs = [
+                rf"\bas a {gender}\b",
+                rf"\bbeing {gender}\b",
+                rf"\syou are {gender}\b"
+            ]
+            for pattern in unnecessary_refs:
+                sanitized = re.sub(pattern, "", sanitized, flags=re.IGNORECASE)
+        
+        if profile_info.get('blood_group'):
+            # Remove blood group mentions unless medically necessary
+            blood_group = profile_info['blood_group']
+            sanitized = re.sub(rf"\bblood type {blood_group}\b", "", sanitized, flags=re.IGNORECASE)
+            sanitized = re.sub(rf"\b{blood_group} blood\b", "", sanitized, flags=re.IGNORECASE)
+        
+        # Clean up any double spaces or awkward spacing from removals
+        import re
+        sanitized = re.sub(r'\s+', ' ', sanitized)
+        sanitized = sanitized.strip()
+        
+        # Debug: Show if any sanitization occurred
+        if sanitized != original_response:
+            print(f"=== RESPONSE SANITIZATION ===")
+            print(f"Original length: {len(original_response)}")
+            print(f"Sanitized length: {len(sanitized)}")
+            print(f"Changes made: Patient information filtered")
+        
+        return sanitized
 
 # Usage example
 if __name__ == "__main__":
