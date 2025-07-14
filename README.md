@@ -1,5 +1,4 @@
 # First Res-Q - Offline-First AI Emergency Assistant
-
 A completely offline-capable first aid chatbot application with local AI capabilities, built with FastAPI backend, HTML/CSS/JS frontend, and containerized AI services. **No internet required after initial setup!**
 
 ## 💻 Development Note
@@ -68,7 +67,7 @@ docker compose up -d --build
 sleep 20
 
 # Download AI model (optional but recommended)
-docker exec ollama ollama pull phi3:mini
+docker exec ollama ollama pull qwen2:1.5b
 ```
 
 ### 3. Build and Start Services
