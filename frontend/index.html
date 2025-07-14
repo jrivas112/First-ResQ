@@ -16,6 +16,7 @@
 
   <main>
     <section>
+
         <div class="chat-container">
           <div class="ai-controls">
             <div class="status-indicator">
@@ -36,12 +37,17 @@
                 💬 Summary
               </button>
             </div>
+
+
           <div class="profile-selector">
             <label for="profile-select">Profile:</label>
             <select id="profile-select"></select>
+            <!-- NEW: separate button to open the “New Profile” modal -->
+            <button id="create-profile-btn">New Profile</button>
             <button id="edit-profile-btn" disabled>Edit</button>
             <button id="delete-profile-btn" disabled>Delete</button>
           </div>
+
           </div>
           
           <div id="chat-box"></div>
@@ -74,11 +80,14 @@
               </div>
             </form>
           </div>
+
+   
         </div>
-        <script src="profileManager.js"></script>
-        <script src="chatbot.js"></script>
+      </div>
+
+      <script src="profileManager.js"></script>
+      <script src="chatbot.js"></script>
     </section>
   </main>
-
 </body>
 </html>

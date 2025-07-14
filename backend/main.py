@@ -25,28 +25,26 @@ try:
     if rag_initialized:
         print("✅ Enhanced RAG system initialized successfully!")
     else:
-        print("❌ Enhanced RAG system failed to initialize, falling back to simple RAG")
-        # Fallback to simple RAG
-        from simple_rag import SimpleFirstAidRAG
-        first_aid_rag = SimpleFirstAidRAG()
-        rag_initialized = first_aid_rag.initialize()
-except Exception as e:
-    print(f"❌ Error loading enhanced RAG system: {e}")
-    print("Falling back to simple RAG system...")
-    try:
-        from simple_rag import SimpleFirstAidRAG
-        first_aid_rag = SimpleFirstAidRAG()
-        rag_initialized = first_aid_rag.initialize()
-    except Exception as e2:
-        print(f"❌ Error loading simple RAG system: {e2}")
+        print("❌ Enhanced RAG system failed to initialize")
         first_aid_rag = None
         rag_initialized = False
+except Exception as e:
+    print(f"❌ Error loading enhanced RAG system: {e}")
+    first_aid_rag = None
+    rag_initialized = False
 
 # Request model for attachments
 class Attachment(BaseModel):
     name: str
     mime: str
     contentString: str
+
+# Request model for profile information
+class ProfileInfo(BaseModel):
+    age: Optional[str] = None
+    gender: Optional[str] = None
+    blood_group: Optional[str] = None
+    pre_existing_conditions: Optional[str] = None
 
 # Request model for chat
 class ChatRequest(BaseModel):
@@ -55,6 +53,7 @@ class ChatRequest(BaseModel):
     sessionId: Optional[str] = None
     attachments: Optional[List[Attachment]] = []
     reset: Optional[bool] = False
+    profile: Optional[ProfileInfo] = None
 
 @app.post("/ask")
 async def ask_question(payload: ChatRequest):
@@ -66,7 +65,24 @@ async def ask_question(payload: ChatRequest):
         }
     
     try:
-        result = first_aid_rag.get_answer(payload.message)
+        # Convert profile to dict if provided
+        profile_dict = None
+        profile_id = "guest"  # Default profile ID
+        
+        if payload.profile:
+            profile_dict = {
+                'age': payload.profile.age,
+                'gender': payload.profile.gender,
+                'blood_group': payload.profile.blood_group,
+                'pre_existing_conditions': payload.profile.pre_existing_conditions
+            }
+        
+        # Extract profile ID from session or payload (you can extend this logic)
+        if hasattr(payload, 'sessionId') and payload.sessionId:
+            # Use sessionId or create a profile ID mapping
+            profile_id = payload.sessionId
+        
+        result = first_aid_rag.get_answer(payload.message, profile_dict, profile_id)
         
         return {
             "textResponse": result["answer"],
@@ -93,41 +109,27 @@ async def ask_rag_only(payload: ChatRequest):
         }
     
     try:
-        # For RAG-only mode, we'll use the simple RAG system or force the enhanced one to skip Ollama
-        if hasattr(first_aid_rag, 'search_similar_questions'):
-            # Using enhanced RAG system but skipping Ollama
-            similar_questions = first_aid_rag.search_similar_questions(payload.message, top_k=1)
-            
-            if similar_questions and similar_questions[0]['similarity'] > 0.1:
-                best_match = similar_questions[0]
-                return {
-                    "textResponse": best_match['answer'],
-                    "sources": [f"Question {best_match.get('index', 'N/A')}: {best_match['question'][:100]}..."],
-                    "confidence": best_match['similarity'],
-                    "type": "rag_only",
-                    "method": "rag_only",
-                    "similar_questions": [q['question'][:80] + "..." if len(q['question']) > 80 else q['question'] for q in similar_questions[:3]]
-                }
-            else:
-                return {
-                    "textResponse": "I don't have specific information about that in my knowledge base. For the best answer, try turning off 'RAG Only' mode to use AI enhancement.",
-                    "confidence": 0.0,
-                    "sources": [],
-                    "type": "rag_only",
-                    "method": "fallback",
-                    "similar_questions": []
-                }
-        else:
-            # Using simple RAG system
-            result = first_aid_rag.get_answer(payload.message)
-            result["method"] = "rag_only"
+        # For RAG-only mode, use the enhanced RAG system but skip Ollama
+        similar_questions = first_aid_rag.search_similar_questions(payload.message, top_k=1)
+        
+        if similar_questions and similar_questions[0]['similarity'] > 0.1:
+            best_match = similar_questions[0]
             return {
-                "textResponse": result["answer"],
-                "sources": [result["source"]] if result["source"] != "fallback" else [],
-                "confidence": result["confidence"],
+                "textResponse": best_match['answer'],
+                "sources": [f"Question {best_match.get('index', 'N/A')}: {best_match['question'][:100]}..."],
+                "confidence": best_match['similarity'],
                 "type": "rag_only",
-                "method": result["method"],
-                "similar_questions": result.get("similar_questions", [])
+                "method": "rag_only",
+                "similar_questions": [q['question'][:80] + "..." if len(q['question']) > 80 else q['question'] for q in similar_questions[:3]]
+            }
+        else:
+            return {
+                "textResponse": "I don't have specific information about that in my knowledge base. For the best answer, try turning off 'RAG Only' mode to use AI enhancement.",
+                "confidence": 0.0,
+                "sources": [],
+                "type": "rag_only",
+                "method": "fallback",
+                "similar_questions": []
             }
             
     except Exception as e:
@@ -173,15 +175,18 @@ async def health_check():
         "enhanced_mode": rag_initialized and len(available_models) > 0
     }
 
+class ClearConversationRequest(BaseModel):
+    sessionId: str = "guest"
+
 @app.post("/clear-conversation")
-async def clear_conversation():
-    """Clear conversation history for a fresh start"""
+async def clear_conversation(request: ClearConversationRequest):
+    """Clear conversation history for a specific profile"""
     try:
-        if first_aid_rag and hasattr(first_aid_rag, 'clear_conversation_history'):
-            first_aid_rag.clear_conversation_history()
+        if first_aid_rag and hasattr(first_aid_rag, 'clear_profile_history'):
+            first_aid_rag.clear_profile_history(request.sessionId)
             return {
                 "status": "success",
-                "message": "Conversation history cleared"
+                "message": f"Conversation history cleared for profile: {request.sessionId}"
             }
         else:
             return {
@@ -195,11 +200,11 @@ async def clear_conversation():
         }
 
 @app.get("/conversation-summary")
-async def get_conversation_summary():
+async def get_conversation_summary(sessionId: str = "guest"):
     """Get current conversation summary"""
     try:
         if first_aid_rag and hasattr(first_aid_rag, 'get_conversation_summary'):
-            summary = first_aid_rag.get_conversation_summary()
+            summary = first_aid_rag.get_conversation_summary(sessionId)
             return {
                 "status": "success",
                 **summary
@@ -209,7 +214,8 @@ async def get_conversation_summary():
                 "status": "info",
                 "total_exchanges": 0,
                 "recent_topics": [],
-                "context_enabled": False
+                "context_enabled": False,
+                "profile_id": sessionId
             }
     except Exception as e:
         return {

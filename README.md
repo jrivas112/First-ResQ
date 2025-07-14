@@ -363,7 +363,6 @@ QHelper-AI/
 │   ├── requirements.txt     # Python dependencies
 │   ├── main.py             # FastAPI application
 │   ├── enhanced_rag.py     # Enhanced RAG + Ollama system
-│   ├── simple_rag.py       # Fallback CSV-only RAG system
 │   ├── firstaidqa-*.csv    # First aid Q&A dataset
 │   ├── main.py             # FastAPI backend application
 │   ├── requirements.txt    # Python dependencies
@@ -581,34 +580,20 @@ Example:
 #### 8. **Quality Assurance**
 - **Debug Logging**: Comprehensive request/response logging for troubleshooting
 - **Health Checks**: Continuous monitoring of Ollama model availability
-- **Graceful Degradation**: System remains functional even if AI services fail
 - **Response Validation**: Ensures non-empty, meaningful responses before returning
 
-### 🔍 `simple_rag.py` - **Lightweight Fallback** (Knowledge Base Only)
-**Purpose**: Lightweight backup system when AI services are unavailable
-- **Technology**: TF-IDF vectorization only (no external AI dependencies)
+### 🎯 Enhanced RAG System
+
+**Primary System**: `enhanced_rag.py` - Production-ready RAG with AI enhancement
+- **Technology**: TF-IDF vectorization + Ollama LLM integration
 - **Capabilities**:
-  - Fast text preprocessing and similarity matching
-  - Cached TF-IDF vectors for quick startup
-  - Direct CSV knowledge base searches
-  - Lower similarity thresholds for broader matching
-- **Use Case**: Fallback when Ollama is down or unavailable
-- **Advantages**: Ultra-fast responses, minimal resource usage, guaranteed availability
-
-###  System Selection Logic
-
-The application automatically selects the best available system:
-
-1. **Primary**: `enhanced_rag.py` - Used when Ollama is available (RAG + AI enhancement)
-2. **Fallback**: `simple_rag.py` - Used when Ollama is unavailable (knowledge base only)
-
-### 🎯 System Comparison
-
-| System | Best For | Performance | Quality | Dependencies |
-|--------|----------|-------------|---------|--------------|
-| `enhanced_rag.py` | Production use | Medium | Highest | Ollama required |
-| `simple_rag.py` | Offline/backup | Fastest | Good | None |
-| `local_rag.py` | Large-scale future use | Varies | Good | Vector DB + Ollama |
+  - Smart conversation context management
+  - Multi-modal response generation (RAG + AI)
+  - Cached TF-IDF vectors for fast similarity search
+  - Model-specific optimizations for speed and quality
+  - Graceful degradation when AI services are unavailable
+- **Use Case**: Primary system for all medical assistance queries
+- **Advantages**: High-quality responses, context awareness, reliable fallback mechanisms
 
 ## 🔄 Development Workflow
 

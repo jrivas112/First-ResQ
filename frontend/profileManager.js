@@ -1,10 +1,14 @@
+// profileManager.js
+
 (async function(){
-  const selectEl     = document.getElementById('profile-select');
-  const modal        = document.getElementById('profile-modal');
-  const form         = document.getElementById('profile-form');
-  const cancelBtn    = document.getElementById('cancel-btn');
-  const editBtn      = document.getElementById('edit-profile-btn');
-  const deleteBtn    = document.getElementById('delete-profile-btn');
+  // --- DOM Elements ---
+  const selectEl   = document.getElementById('profile-select');
+  const modal      = document.getElementById('profile-modal');
+  const form       = document.getElementById('profile-form');
+  const cancelBtn  = document.getElementById('cancel-btn');
+  const createBtn  = document.getElementById('create-profile-btn');
+  const editBtn    = document.getElementById('edit-profile-btn');
+  const deleteBtn  = document.getElementById('delete-profile-btn');
 
   // --- Crypto helpers ---
   async function deriveKey(passphrase, salt) {
@@ -53,7 +57,7 @@
     key: null,
     salt: null,
     guestMode: false,
-    editingId: null,   // ← track edit mode
+    editingId: null,
 
     async init() {
       // 1) Load or generate persistent salt
@@ -127,26 +131,30 @@
       selectEl.addEventListener('change',    e => this.onSelectChange(e));
       cancelBtn.addEventListener('click',    () => this.onCancel());
       form.addEventListener('submit',        e => this.onFormSubmit(e));
+      createBtn.addEventListener('click',    () => {
+        form.reset();
+        this.editingId = null;
+        this.showModal();
+      });
       editBtn.addEventListener('click',      () => this.onEditProfile());
       deleteBtn.addEventListener('click',    () => this.onDeleteProfile());
     },
 
     updateDropdown() {
       selectEl.innerHTML = '';
-      // Guest
+      // Guest option
       selectEl.appendChild(Object.assign(document.createElement('option'), {
-        value: 'guest', textContent: 'Guest'
+        value: 'guest',
+        textContent: 'Guest'
       }));
-      // Profiles
+      // Saved profiles
       if (!this.guestMode) {
         this.profiles.forEach(p => {
           selectEl.appendChild(Object.assign(document.createElement('option'), {
-            value: p.id, textContent: p.name
+            value: p.id,
+            textContent: p.name
           }));
         });
-        selectEl.appendChild(Object.assign(document.createElement('option'), {
-          value: 'create', textContent: 'Create New Profile…'
-        }));
       }
       selectEl.value = this.currentId;
     },
@@ -158,16 +166,17 @@
     },
 
     onSelectChange(e) {
-      const val = e.target.value;
-      if (val === 'create') {
-        form.reset();
-        this.editingId = null;
-        this.showModal();
-      } else {
-        this.currentId = val;
-        this.saveCurrentId();
-        this.hideModal();
+      this.currentId = e.target.value;
+      this.saveCurrentId();
+      this.hideModal();
+
+      // Switch chat tab when profile changes
+      if (window.chatManager) {
+        const name = this.getCurrentProfile().name;
+        chatManager.createTab(this.currentId, name);
+        chatManager.selectTab(this.currentId);
       }
+
       this.updateButtons();
     },
 
@@ -181,18 +190,18 @@
       const data = new FormData(form);
       let profile;
       if (this.editingId) {
-        // --- update existing ---
+        // Update existing
         profile = this.profiles.find(p => p.id === this.editingId);
-        profile.name         = data.get('name');
-        profile.age          = data.get('age');
-        profile.sex          = data.get('sex');
-        profile.blood_group  = data.get('blood_group');
-        profile.pre_cond     = data.get('pre_cond');
+        profile.name        = data.get('name');
+        profile.age         = data.get('age');
+        profile.sex         = data.get('sex');
+        profile.blood_group = data.get('blood_group');
+        profile.pre_cond    = data.get('pre_cond');
         this.editingId = null;
       } else {
-        // --- create new ---
+        // Create new
         profile = {
-          id: Date.now().toString(),
+          id:           Date.now().toString(),
           name:         data.get('name'),
           age:          data.get('age'),
           sex:          data.get('sex'),
@@ -214,11 +223,11 @@
       if (this.currentId === 'guest') return;
       const p = this.profiles.find(x => x.id === this.currentId);
       this.editingId = p.id;
-      form.elements['name'].value         = p.name;
-      form.elements['age'].value          = p.age;
-      form.elements['sex'].value          = p.sex;
-      form.elements['blood_group'].value  = p.blood_group;
-      form.elements['pre_cond'].value     = p.pre_cond;
+      form.elements['name'].value        = p.name;
+      form.elements['age'].value         = p.age;
+      form.elements['sex'].value         = p.sex;
+      form.elements['blood_group'].value = p.blood_group;
+      form.elements['pre_cond'].value    = p.pre_cond;
       this.showModal();
     },
 
@@ -254,6 +263,6 @@
 
   window.profileManager = profileManager;
   document.addEventListener('DOMContentLoaded', () => {
-    profileManager.init().catch(err => console.error(err));
+    profileManager.init().catch(console.error);
   });
 })();
