@@ -1,4 +1,4 @@
-### 🚑 First Res-Q – Offline-First AI Emergency Assistant
+### 🚑 First Res-Q – Offline-First AI Emergency Assistant (Scroll down for setup instructions)
 
 **First Res-Q** is a fully offline-capable **first aid chatbot** designed to assist in emergency situations without requiring an internet connection after initial setup. Built with a **FastAPI backend**, a responsive **HTML/CSS/JavaScript frontend**, and **containerized AI services**, it ensures reliable performance in any environment.
 
