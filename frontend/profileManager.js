@@ -240,6 +240,7 @@
       this.saveCurrentId();
       this.updateDropdown();
       this.updateButtons();
+      this.hideModal(); // Close the modal after deletion
     },
 
     getCurrentProfile() {
