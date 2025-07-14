@@ -1,0 +1,115 @@
+# Snapdragon X-Elite Optimized Docker Compose
+# This configuration enables NPU acceleration and X-Elite specific optimizations
+
+version: '3.8'
+
+services:
+  # Frontend with Vite dev server (development mode)
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - SNAPDRAGON_FRONTEND_OPTIMIZE=true
+    depends_on:
+      - backend
+
+  # Backend API
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - ollama
+      - qdrant
+    environment:
+      - OLLAMA_HOST=ollama:11434
+      - QDRANT_HOST=qdrant:6333
+      - PYTHONPATH=/app
+      # Snapdragon X-Elite optimizations
+      - SNAPDRAGON_NPU_ENABLED=true
+      - AI_ENGINE_PATH=/opt/qualcomm/aiengine
+      - NPU_MEMORY_LIMIT=4GB
+      - X_ELITE_POWER_PROFILE=emergency
+      - X_ELITE_MODEL_OPTIMIZATION=true
+
+  # Local LLM service using Ollama with X-Elite NPU support
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      # Mount X-Elite NPU drivers and libraries
+      - /opt/qualcomm/aiengine:/opt/qualcomm/aiengine:ro
+      - /dev/npu:/dev/npu
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      # Enable Snapdragon NPU acceleration
+      - SNAPDRAGON_NPU_ENABLED=true
+      - OLLAMA_NPU_LAYERS=auto
+      - OLLAMA_MEMORY_OPTIMIZATION=unified
+      - OLLAMA_POWER_PROFILE=emergency
+    devices:
+      - /dev/npu:/dev/npu  # X-Elite NPU device access
+    privileged: true  # Required for NPU access
+    restart: unless-stopped
+
+  # Vector database
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      # X-Elite memory optimization
+      - QDRANT__STORAGE__MEMORY_THRESHOLD=0.8
+      - X_ELITE_VECTOR_OPTIMIZATION=true
+
+  # Ollama Web UI for model management
+  ollama-webui:
+    image: ghcr.io/ollama-webui/ollama-webui:main
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_API_BASE_URL=http://ollama:11434/api
+      - WEBUI_SECRET_KEY=your-secret-key-here
+      # X-Elite UI optimizations
+      - X_ELITE_UI_ACCELERATION=true
+      - SNAPDRAGON_WEBUI_OPTIMIZE=true
+    volumes:
+      - ollama-webui:/app/backend/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+    driver: local
+    driver_opts:
+      # X-Elite storage optimization
+      type: none
+      o: bind
+      device: /var/lib/ollama-xelite
+  qdrant_data:
+    driver: local
+  ollama-webui:
+    driver: local
+
+# X-Elite specific network configuration
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      # Optimize for X-Elite's network capabilities
+      com.docker.network.bridge.name: xelite-bridge
+      com.docker.network.driver.mtu: 9000  # Jumbo frames for faster inter-container communication

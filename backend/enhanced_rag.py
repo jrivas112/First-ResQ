@@ -23,7 +23,17 @@ class EnhancedFirstAidRAG:
         self.question_vectors = None
         self.vectors_file = "question_vectors.pkl"
         self.available_models = []
-        self.preferred_models = ["qwen2:1.5b", "phi3:mini", "gemma:2b", "mistral:latest", "mistral", "llama2:7b", "llama2"]  # Order by speed and preference
+        # Optimized model preferences for Snapdragon X-Elite processors
+        # Prioritizing models that leverage X-Elite's NPU and on-device AI capabilities
+        self.preferred_models = [
+            "llama3.2:3b",      # Optimized for X-Elite NPU acceleration
+            "phi3.5:3.8b",      # Microsoft's X-Elite optimized model
+            "qwen2.5:3b",       # Efficient reasoning for edge devices
+            "mistral:7b",       # Balanced performance on X-Elite
+            "gemma2:2b",        # Google's edge-optimized model
+            "phi3:mini",        # Fallback for lower memory scenarios
+            "qwen2:1.5b"        # Ultra-fast emergency response model
+        ]  # Order by speed and preference
         self.conversation_histories = {}  # Dictionary to store per-profile conversation histories
         self.current_profile_id = "guest"  # Default profile ID
         
@@ -85,7 +95,24 @@ class EnhancedFirstAidRAG:
         return results
     
     def get_best_model(self) -> str:
-        """Get the best available model from our preferred list"""
+        """Get the best available model optimized for Snapdragon X-Elite NPU"""
+        # Check for X-Elite NPU optimization environment variable
+        use_npu = os.getenv('SNAPDRAGON_NPU_ENABLED', 'false').lower() == 'true'
+        
+        if use_npu:
+            print("🧠 Snapdragon X-Elite NPU acceleration enabled")
+            # Prioritize models optimized for X-Elite NPU
+            npu_optimized_models = [
+                "llama3.2:3b",      # X-Elite NPU optimized
+                "phi3.5:3.8b",      # Microsoft X-Elite model
+                "qwen2.5:3b"        # Edge-optimized for NPU
+            ]
+            for model in npu_optimized_models:
+                if model in self.available_models:
+                    print(f"🚀 Using X-Elite optimized model: {model}")
+                    return model
+        
+        # Standard model selection for non-X-Elite systems
         for model in self.preferred_models:
             if model in self.available_models:
                 return model
@@ -383,272 +410,8 @@ Use the knowledge base information and expand on it with helpful details."""
                 print(f"✅ Model {best_model} is working")
                 return True
             else:
-                print(f"❌ Model {best_model} failed test query")
+                print(f"❌ Model {best_model} failed to respond")
                 return False
-                
         except Exception as e:
-            print(f"Error testing Ollama: {e}")
+            print(f"Failed to connect to Ollama: {e}")
             return False
-    
-    def clear_conversation_history(self):
-        """Clear conversation history for current profile only"""
-        self.clear_current_profile_history()
-    
-    def get_conversation_summary(self, profile_id: str = "guest") -> Dict:
-        """Get a summary of the current conversation - medical queries only for specified profile"""
-        print(f"=== CONVERSATION SUMMARY DEBUG ===")
-        print(f"Requested profile_id: {profile_id}")
-        print(f"All conversation histories: {list(self.conversation_histories.keys())}")
-        print(f"Total profiles with data: {len(self.conversation_histories)}")
-        
-        # Set the profile for this operation
-        original_profile = self.current_profile_id
-        self.set_current_profile(profile_id)
-        
-        try:
-            # Clean any unwanted entries before generating summary
-            self.clean_conversation_history()
-            
-            current_history = self.get_current_conversation_history()
-            print(f"History length for profile '{profile_id}': {len(current_history)}")
-            
-            if current_history:
-                print(f"Recent questions:")
-                for i, entry in enumerate(current_history[-3:]):
-                    print(f"  {i+1}. {entry['question'][:100]}...")
-            else:
-                print("No conversation history found")
-            
-            result = {
-                "total_exchanges": len(current_history),
-                "recent_topics": [q['question'][:50] + "..." if len(q['question']) > 50 else q['question'] 
-                                for q in current_history[-3:]] if current_history else [],
-                "context_enabled": True,
-                "profile_id": profile_id,
-                "note": f"All questions (except greetings) for profile '{profile_id}' are stored"
-            }
-            print(f"Returning summary: {result}")
-            print(f"=== END CONVERSATION SUMMARY DEBUG ===")
-            return result
-        finally:
-            # Restore original profile
-            if original_profile:
-                self.set_current_profile(original_profile)
-    
-    def is_greeting(self, query: str) -> bool:
-        """Detect if the query is just a greeting or casual conversation"""
-        greetings = [
-            "hi", "hello", "hey", "good morning", "good afternoon", "good evening",
-            "greetings", "what's up", "how are you", "howdy", "yo", "sup",
-            "good day", "hiya", "thanks", "thank you", "bye", "goodbye"
-        ]
-        
-        query_lower = query.lower().strip()
-        
-        # Check for exact matches or simple variations
-        for greeting in greetings:
-            if query_lower == greeting or query_lower == greeting + "!" or query_lower == greeting + ".":
-                return True
-        
-        # Check for very short, non-medical queries
-        if len(query_lower) <= 3 and query_lower.isalpha():
-            return True
-            
-        return False
-    
-    def get_greeting_response(self, query: str) -> Dict:
-        """Generate a friendly greeting response"""
-        friendly_responses = [
-            "Hello! I'm QHelper AI, your emergency first aid assistant. How can I help you today?",
-            "Hi there! I'm here to help with first aid questions and emergency guidance. What do you need assistance with?",
-            "Hello! I'm QHelper AI. Ask me about first aid, emergency procedures, or medical guidance. How can I assist you?",
-            "Hi! I'm your first aid assistant. Whether it's treating wounds, handling emergencies, or general health questions - I'm here to help!"
-        ]
-        
-        # Simple hash-based selection for consistency
-        response_index = abs(hash(query.lower())) % len(friendly_responses)
-        
-        return {
-            "answer": f"<p>{friendly_responses[response_index]}</p><p><strong>Quick examples:</strong></p><ul><li>\"How do I treat a cut?\"</li><li>\"What should I do if someone is choking?\"</li><li>\"My child has a fever, what should I do?\"</li></ul>",
-            "confidence": 1.0,
-            "source": "Friendly greeting response",
-            "similar_questions": [],
-            "method": "greeting"
-        }
-    
-    def detect_follow_up_question(self, query: str) -> bool:
-        """Detect if the query is a follow-up question that needs context"""
-        follow_up_indicators = [
-            "what about", "how about", "what if", "and if", "also",
-            "what happens if", "but what", "what should", "how can",
-            "what else", "anything else", "more about", "tell me more",
-            "what next", "then what", "after that", "also what",
-            "but if", "however", "instead", "alternatively"
-        ]
-        
-        query_lower = query.lower()
-        return any(indicator in query_lower for indicator in follow_up_indicators)
-    
-    def add_conversation_context(self, query: str) -> str:
-        """Add conversation context only if it seems like a follow-up question"""
-        current_history = self.get_current_conversation_history()
-        
-        if not current_history or not self.detect_follow_up_question(query):
-            return query  # No context needed for fresh questions
-        
-        # Add context from the most recent Q&A for current profile
-        recent = current_history[-1]
-        context = f"""Previous conversation context:
-Q: {recent['question']}
-A: {recent['answer'][:150]}{'...' if len(recent['answer']) > 150 else ''}
-
-Current question: {query}"""
-        
-        return context
-    
-    def update_conversation_history(self, question: str, answer: str):
-        """Update conversation history with the latest Q&A pair - only filter out greetings"""
-        print(f"=== CONVERSATION HISTORY DEBUG ===")
-        print(f"Attempting to store question: '{question}'")
-        print(f"Current profile ID: {self.current_profile_id}")
-        
-        # Only filter out greetings - allow all other questions
-        if self.is_greeting(question):
-            print(f"❌ Question classified as greeting - NOT storing")
-            return
-            
-        print(f"✅ Question passed filters - STORING in history")
-        
-        # Get the current profile's conversation history
-        profile_history = self.get_current_conversation_history()
-        print(f"Current history length before adding: {len(profile_history)}")
-        
-        profile_history.append({
-            'question': question,
-            'answer': answer,
-            'timestamp': pd.Timestamp.now()
-        })
-        
-        # Keep only the most recent entries (limit to 5)
-        if len(profile_history) > 5:
-            profile_history = profile_history[-5:]
-        
-        # Update the profile's conversation history
-        self.conversation_histories[self.current_profile_id] = profile_history
-        print(f"History length after adding: {len(profile_history)}")
-        print(f"Total profiles with history: {len(self.conversation_histories)}")
-        print(f"=== END CONVERSATION HISTORY DEBUG ===")
-
-    def clean_conversation_history(self):
-        """Remove any greeting entries that might have slipped through for current profile"""
-        current_history = self.get_current_conversation_history()
-        original_count = len(current_history)
-        
-        cleaned_history = [
-            entry for entry in current_history 
-            if not self.is_greeting(entry['question'])
-        ]
-        
-        cleaned_count = original_count - len(cleaned_history)
-        if cleaned_count > 0:
-            print(f"Cleaned {cleaned_count} greeting entries from conversation history for profile: {self.current_profile_id}")
-            self.conversation_histories[self.current_profile_id] = cleaned_history
-    
-    def set_current_profile(self, profile_id: str):
-        """Set the current profile for conversation context"""
-        self.current_profile_id = profile_id
-        # Initialize profile history if it doesn't exist
-        if profile_id not in self.conversation_histories:
-            self.conversation_histories[profile_id] = []
-    
-    def get_current_conversation_history(self) -> List[Dict]:
-        """Get conversation history for the current profile"""
-        if self.current_profile_id not in self.conversation_histories:
-            self.conversation_histories[self.current_profile_id] = []
-        return self.conversation_histories[self.current_profile_id]
-    
-    def clear_current_profile_history(self):
-        """Clear conversation history for current profile only"""
-        self.conversation_histories[self.current_profile_id] = []
-        print(f"Conversation history cleared for profile: {self.current_profile_id}")
-    
-    def clear_profile_history(self, profile_id: str):
-        """Clear conversation history for a specific profile"""
-        if profile_id in self.conversation_histories:
-            self.conversation_histories[profile_id] = []
-            print(f"Cleared conversation history for profile: {profile_id}")
-        else:
-            print(f"No conversation history found for profile: {profile_id}")
-
-    def sanitize_response(self, response: str, profile_info: Dict = None) -> str:
-        """Remove any accidentally included patient information from the response"""
-        if not profile_info:
-            return response
-            
-        original_response = response
-        sanitized = response
-        
-        # Remove specific patient details if they appear
-        if profile_info.get('age'):
-            # Remove age references like "25-year-old" or "age 25"
-            import re
-            age_patterns = [
-                rf"\b{profile_info['age']}-year-old\b",
-                rf"\bage {profile_info['age']}\b",
-                rf"\b{profile_info['age']} years old\b",
-                rf"\byour age of {profile_info['age']}\b"
-            ]
-            for pattern in age_patterns:
-                sanitized = re.sub(pattern, "", sanitized, flags=re.IGNORECASE)
-        
-        if profile_info.get('gender'):
-            # Remove specific gender references when unnecessary
-            gender = profile_info['gender'].lower()
-            # Only remove if it seems like it's referencing the patient specifically
-            unnecessary_refs = [
-                rf"\bas a {gender}\b",
-                rf"\bbeing {gender}\b",
-                rf"\syou are {gender}\b"
-            ]
-            for pattern in unnecessary_refs:
-                sanitized = re.sub(pattern, "", sanitized, flags=re.IGNORECASE)
-        
-        if profile_info.get('blood_group'):
-            # Remove blood group mentions unless medically necessary
-            blood_group = profile_info['blood_group']
-            sanitized = re.sub(rf"\bblood type {blood_group}\b", "", sanitized, flags=re.IGNORECASE)
-            sanitized = re.sub(rf"\b{blood_group} blood\b", "", sanitized, flags=re.IGNORECASE)
-        
-        # Clean up any double spaces or awkward spacing from removals
-        import re
-        sanitized = re.sub(r'\s+', ' ', sanitized)
-        sanitized = sanitized.strip()
-        
-        # Debug: Show if any sanitization occurred
-        if sanitized != original_response:
-            print(f"=== RESPONSE SANITIZATION ===")
-            print(f"Original length: {len(original_response)}")
-            print(f"Sanitized length: {len(sanitized)}")
-            print(f"Changes made: Patient information filtered")
-        
-        return sanitized
-
-# Usage example
-if __name__ == "__main__":
-    rag = EnhancedFirstAidRAG()
-    if rag.initialize():
-        test_queries = [
-            "How do I treat a burn?",
-            "What should I do if someone is choking?",
-            "My child fell and hurt their arm",
-            "How to stop severe bleeding from a deep cut?"
-        ]
-        
-        for query in test_queries:
-            print(f"\n🔍 Query: {query}")
-            result = rag.get_answer(query)  # No profile for test queries
-            print(f"📋 Confidence: {result['confidence']:.3f}")
-            print(f"🤖 Method: {result['method']}")
-            print(f"💡 Answer: {result['answer'][:200]}...")
-            if result['source'] != 'fallback':
-                print(f"📚 Source: {result['source']}")

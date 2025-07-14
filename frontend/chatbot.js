@@ -182,7 +182,7 @@ async function getConversationSummary() {
       const profileInfo = summary.profile_id === "guest" ? "Guest" : `Profile: ${summary.profile_id}`;
       chatBox.innerHTML += 
         `<div class="bubble bot system-message">
-          <strong>💬 Conversation Summary (${profileInfo}):</strong><br>
+          <strong>💬 Conversation Summary:</strong><br>
           • Total questions: ${summary.total_exchanges}<br>
           • Recent topics: ${summary.recent_topics.join(", ")}<br>
           • Context enabled: ${summary.context_enabled ? "✅ Yes" : "❌ No"}

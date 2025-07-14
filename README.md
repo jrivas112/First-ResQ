@@ -1,6 +1,21 @@
-# First Res-Q - Offline-First AI Emergency Assistant
+# First Res-Q - Offline-First AI Emergency Assistant for Snapdragon X-Elite
 
-A completely offline-capable first aid chatbot application with local AI capabilities, built with FastAPI backend, HTML/CSS/JS frontend, and containerized AI services. **No internet required after initial setup!**
+A completely offline-capable first aid chatbot application optimized for **Snapdragon X-Elite processors**, built with FastAPI backend, HTML/CSS/JS frontend, and containerized AI services. **No internet required after initial setup!**
+
+## 🏆 Snapdragon X-Elite Optimization
+
+This application is specifically optimized to leverage the **on-device AI capabilities of Snapdragon X-Elite processors**:
+
+- **🧠 Neural Processing Unit (NPU) Acceleration** - Optimized model selection for X-Elite's AI processing capabilities
+- **⚡ Efficient Model Inference** - Prioritizes models that run efficiently on X-Elite architecture
+- **🔋 Power-Optimized AI** - Designed to maximize battery life during emergency situations
+- **📱 Always-Available Intelligence** - Leverages X-Elite's always-on AI capabilities for instant responses
+
+### Snapdragon X-Elite Features Utilized:
+- **On-device LLM inference** using optimized models for X-Elite NPU
+- **Vector processing acceleration** for RAG similarity search
+- **Memory-efficient operation** optimized for X-Elite's unified memory architecture
+- **Edge AI processing** ensuring complete privacy and offline operation
 
 ## 🚀 Features
 
