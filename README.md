@@ -24,7 +24,7 @@ This application was developed and optimized on **Snapdragon X-Elite** hardware.
 
 Before you begin, ensure you have the following installed:
 
-- **Docker Desktop** (latest version)
+- **Docker Desktop** (latest version) https://www.docker.com/
 - **Docker Compose** (usually included with Docker Desktop)
 - **Git** (for cloning the repository)
 
@@ -95,6 +95,17 @@ docker exec ollama ollama pull qwen2:1.5b
 # Verify the model was downloaded
 docker exec ollama ollama list
 ```
+## IF IT DOESNT WORK AFTER INSTALLING THE MODEL
+run the following commands:
+```bash
+docker compose down
+
+docker compose build
+
+docker compose up -d
+
+```
+**Wait 10-20 seconds for all the services to start**
 
 **Model Performance:**
 - `qwen2:1.5b` (934MB) - Ultra-fast responses, minimal memory usage, perfect for emergency first aid
