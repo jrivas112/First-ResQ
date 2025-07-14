@@ -20,6 +20,7 @@ main {
 
 h1, h2 {
   margin-bottom: 0.5em;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .banner-gif {
@@ -140,7 +141,21 @@ button {
   border-radius: 20px;
   float: right;
   width: 5%;
-  padding: 1px 5px 7px 5px;
+  height: 38px;
+  padding: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.send-icon {
+  width: 2.75em;
+  vertical-align: middle;
+}
+
+#send-btn:hover {
+  transform: translateY(-1px);
 }
 
 .bubble {
@@ -198,6 +213,7 @@ button {
 
 .conversation-controls {
   margin-top: 15px;
+  margin-bottom: 15px;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -209,7 +225,7 @@ button {
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.85em;
-  font-weight: 500;
+  /*font-weight: 500;*/
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -218,6 +234,8 @@ button {
 
 .clear-btn {
   background: #dc3545;
+  border-radius: 20px;
+  font-family: 'Segoe UI', sans-serif;
   color: white;
 }
 
@@ -263,4 +281,58 @@ button {
 /* Conversation control buttons animation */
 .controls button:active {
   transform: scale(0.95);
+}
+
+.profile-selector {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+#profile-select {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 14px;
+  padding: 5px;
+  margin-left: 5px;
+  border-radius: 20px;;
+  cursor: pointer;
+}
+
+#edit-profile-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  border-radius: 20px;
+  padding: 3px 10px 6px 10px;
+  margin-left: 10px;
+}
+
+#delete-profile-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Segoe UI', sans-serif;
+  border-radius: 20px;
+  padding: 3px 10px 6px 10px;
+  margin-left: 10px;
+}
+
+#profile-form {
+  font-family: 'Segoe UI', sans-serif;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+#profile-form input, #profile-form select {
+  font-family: 'Segoe UI', sans-serif;
+  padding: 5px;
+  margin: 5px 10px 5px 0px;
+  box-sizing: border-box;
+  border-radius: 20px;
+  border: 1px solid #ccc;
 }

@@ -30,7 +30,7 @@
             </div>
             <div class="conversation-controls">
               <button onclick="clearConversation()" class="control-btn clear-btn" title="Clear conversation history (Ctrl+Shift+C)">
-                🔄 Clear Chat
+                ↻ Clear Chat
               </button>
               <button onclick="getConversationSummary()" class="control-btn summary-btn" title="Show conversation summary">
                 💬 Summary
@@ -52,7 +52,12 @@
           </div>
 
           <input type="text" id="user-input" placeholder="Ask a first aid question..." onkeydown="handleKey(event)"/>
-          <button id="send-btn" onclick="sendMessage()">🚑</button> <!--ᯓ➤⌯⌲-->
+          <!--<button id="send-btn" onclick="sendMessage()">🚑</button>-->
+          <!--ᯓ➤⌯⌲-->
+          <button id="send-btn" onclick="sendMessage()">
+            <img src="send-icon.png" alt="send icon" class="send-icon" />
+          </button>
+
         </div>
         <div id="profile-modal" class="modal hidden">
           <div class="modal-content">
@@ -65,7 +70,7 @@
               <input name="pre_cond" type="text" placeholder="Preexisting Conditions/Allergies" required>
               <div class="actions">
                 <button type="button" id="cancel-btn">Cancel</button>
-                <button type="submit">Save</button>
+                <button type="submit" id="save-btn">Save</button>
               </div>
             </form>
           </div>
