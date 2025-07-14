@@ -45,11 +45,11 @@ cd QHelper-AI
 
 ### 2. Quick Start
 
-**Option A: Use Setup Scripts (Recommended)**
+**Option A: Use Setup Scripts (Recommended) in dir**
 
 **Windows:**
 ```batch
-setup.bat
+./setup.bat
 ```
 
 **macOS/Linux:**
