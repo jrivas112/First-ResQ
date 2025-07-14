@@ -115,9 +115,12 @@ document.addEventListener("DOMContentLoaded", function() {
   function updateStatus() {
     if (statusText) {
       if (ragToggle?.checked) {
-        statusText.innerHTML = "� RAG-Only Mode - Knowledge Base Search";
+        // statusText.innerHTML = "� RAG-Only Mode - Knowledge Base Search";
+        statusText.textContent = "RAG Only Mode - Knowledge Base Only (No LLM Enhancement)";
+        statusText.style.color = "#333";
       } else {
-        statusText.innerHTML = "🟢 Enhanced AI Mode - RAG + LLM Reasoning";
+        //statusText.innerHTML = "🟢 Enhanced AI Mode - RAG + LLM Reasoning";
+        statusText.textContent = "Enhanced AI Mode - RAG + LLM Reasoning";
       }
     }
   }

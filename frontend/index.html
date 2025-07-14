@@ -16,7 +16,6 @@
 
   <main>
     <section>
-
         <div class="chat-container">
           <div class="ai-controls">
             <h3>Profile Settings</h3>
@@ -46,23 +45,26 @@
             </div>
 
             <h3>Chat Settings</h3>
-            <div class="status-indicator">
+            <!--<div class="status-indicator">
               <span id="status-text">🟢 Offline-First AI Assistant Ready</span>
-            </div>
-            <div class="ai-toggle">
-              <label>
-                <input type="checkbox" id="rag-only-mode"> 
-                Use RAG Only (No LLM Enhancement)
-              </label>
-              <small class="toggle-hint">Toggle ON for fastest responses using only the knowledge base</small>
-            </div>
-            <div class="conversation-controls">
-              <button onclick="clearConversation()" class="control-btn clear-btn" title="Clear conversation history (Ctrl+Shift+C)">
-                ↻ Clear Chat
-              </button>
-              <button onclick="getConversationSummary()" class="control-btn summary-btn" title="Show conversation summary">
-                💬 Summary
-              </button>
+            </div>-->
+            <small class="toggle-hint">Toggle ON for fastest responses using only the knowledge base</small>
+            <div class="ai-toggle-bar">
+              <div class="ai-toggle-row">
+                <label class="switch">
+                  <input type="checkbox" id="rag-only-mode"> 
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label" id="status-text">Enhanced AI Mode - RAG + LLM Reasoning</span>
+              </div>
+              <div class="conversation-controls">
+                  <button onclick="clearConversation()" class="control-btn clear-btn" title="Clear conversation history (Ctrl+Shift+C)">
+                    ↻ Clear Chat
+                  </button>
+                  <button onclick="getConversationSummary()" class="control-btn summary-btn" title="Show conversation summary">
+                    💬 Summary
+                  </button>
+              </div>
             </div>
           </div>
           
