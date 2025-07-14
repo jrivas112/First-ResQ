@@ -23,7 +23,7 @@ This application was developed and optimized on **Snapdragon X-Elite** hardware.
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
-
+**Docker Must Be installed**
 - **Docker Desktop** (latest version) https://www.docker.com/
 - **Docker Compose** (usually included with Docker Desktop)
 - **Git** (for cloning the repository)
@@ -34,7 +34,8 @@ Before you begin, ensure you have the following installed:
 - **CPU**: Multi-core processor (GPU optional but not required)
 
 ## 🛠️ Installation & Setup
-
+**Make sure you download and install docker**
+1) **Open docker desktop application before doing the following commands**
 ### 1. Clone the Repository
 
 ```bash
